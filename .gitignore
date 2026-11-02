@@ -1,0 +1,14 @@
+# local secrets
+.env
+.env.*
+!.env.example
+
+# dependencies / build artifacts
+node_modules/
+dist/
+coverage/
+.DS_Store
+
+# Stage 0 local Steam helper session (sensitive)
+.steam-helper-session.json
+.steam-helper-qr.*

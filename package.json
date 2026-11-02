@@ -1,0 +1,29 @@
+{
+  "name": "dapps",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "stage0:check": "node scripts/stage0/check-env.mjs",
+    "stage0:helper": "node scripts/stage0/seller-helper.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/identity411/dapps.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/identity411/dapps/issues"
+  },
+  "homepage": "https://github.com/identity411/dapps#readme",
+  "type": "module",
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "steam-session": "^1.9.4",
+    "steam-tradeoffer-manager": "^2.13.0",
+    "steamcommunity": "^3.50.3"
+  }
+}
