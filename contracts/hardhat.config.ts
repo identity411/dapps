@@ -1,5 +1,11 @@
+import path from "node:path";
+import { config as loadEnvFile } from "dotenv";
 import type { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+
+// Hardhat runs from the contracts workspace; load the repository-root .env
+// explicitly so deploy knobs and RPC_URL behave the same as the Relay/helper.
+loadEnvFile({ path: path.resolve(__dirname, "../.env") });
 
 const config: HardhatUserConfig = {
   solidity: {

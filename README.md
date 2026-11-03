@@ -54,6 +54,8 @@ openssl rand -hex 32     # JWT_SECRET
 openssl rand -base64 32  # RELAY_ENCRYPTION_KEY
 ```
 
+`npm run chain/deploy:local/relay/helper` 都会显式读取**仓库根目录**的 `.env`（即使 npm workspace 把 cwd 切到了子目录），不需要把 `.env` 复制到 `relay/` 或 `helper/`。
+
 打开三个终端：
 
 ```bash
