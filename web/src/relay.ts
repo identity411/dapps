@@ -52,10 +52,15 @@ export interface PairingCode {
 
 async function relayFetch<T>(
   path: string,
-  options: { method?: "GET" | "POST" | "PUT"; token?: string | null; body?: unknown } = {},
+  options: {
+    method?: "GET" | "POST" | "PUT";
+    token?: string | null;
+    body?: unknown;
+    timeoutMs?: number;
+  } = {},
 ): Promise<T> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15_000);
+  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 15_000);
   try {
     const headers: Record<string, string> = { Accept: "application/json" };
     if (options.body !== undefined) headers["Content-Type"] = "application/json";
@@ -118,8 +123,11 @@ export function saveRelayProfile(token: string, steamId64: string): Promise<Rela
 }
 
 export async function getInventory(steamId64: string): Promise<InventoryItem[]> {
+  // The Relay needs up to 20s for Steam; let it return its specific error
+  // instead of aborting first and surfacing a generic relay_timeout.
   const result = await relayFetch<{ items: InventoryItem[] }>(`/inventory/${steamId64}`, {
     method: "GET",
+    timeoutMs: 25_000,
   });
   return result.items || [];
 }
@@ -132,6 +140,7 @@ export function prepareItem(
   return relayFetch<{ itemHash: string }>("/items/prepare", {
     method: "POST",
     token,
+    timeoutMs: 25_000,
     body: { steamId64, assetId },
   });
 }

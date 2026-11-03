@@ -189,6 +189,16 @@ specs/           MVP / Stage 0 / Stage 1 review specs
 ## 常见问题
 
 - **Web 显示“本地合约未配置”**：先 `npm run chain`、`npm run deploy:local`，再重启 `npm run web`。
+- **绑定 SteamID 后库存为空或 `relay_timeout`**：Relay 需要访问 `steamcommunity.com` 读取公开库存。先验证：
+  ```bash
+  curl -4 -I --max-time 10 https://steamcommunity.com/
+  ```
+  如果超时，不是库存设置问题，而是 Relay 所在网络访问不了 Steam 社区。开启系统 VPN/代理后重启 Relay；若使用本地 HTTP 代理（例如 Clash），让 Relay 走代理：
+  ```bash
+  HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=http://127.0.0.1:7890 \
+    NO_PROXY=127.0.0.1,localhost npm run relay
+  ```
+  代理端口以本机实际配置为准。浏览器能打开 Steam 社区不代表 Node/Relay 也能访问。卖家 helper 也会连接 Steam Community，必须使用同样的网络/代理环境启动；最省事的是系统级 VPN。
 - **Relay 启动报 RPC/合约错误**：检查本地链是否运行、`.env` 的 `CONTRACT_ADDRESS` 是否与当前 `deployments/local.json` 一致；链重启后地址会变。
 - **MetaMask 交易失败/网络错误**：切到 31337；重启本地链后需要在 MetaMask 中重置账户 nonce（设置 → 高级 → 清除活动标签页数据）或重新导入。
 - **helper 提示 SteamID 不一致**：Web 绑定的卖家 SteamID64 必须与 helper 扫码登录的账号一致。

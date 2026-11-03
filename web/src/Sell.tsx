@@ -22,6 +22,18 @@ import {
   shortAddress,
 } from "./utils";
 
+function inventoryErrorText(error: unknown): string {
+  if (error instanceof RelayError) {
+    if (error.code === "relay_timeout" || error.code === "steam_inventory_timeout") {
+      return `库存读取超时（${error.code}）：Relay 所在网络无法及时访问 steamcommunity.com。请确认 Relay 能访问 Steam 社区（必要时开启 VPN/代理并重启 Relay），然后重试。`;
+    }
+    if (error.code === "steam_inventory_unavailable" || error.code === "relay_unreachable") {
+      return `库存读取失败（${error.code}）：检查 Relay 网络、Steam 库存是否公开，以及 Relay 终端日志。`;
+    }
+  }
+  return errorText(error);
+}
+
 export function Sell() {
   const { account, signer, relayToken, authState, connecting, connect, reauthenticate } =
     useWallet();
@@ -82,7 +94,7 @@ export function Sell() {
       setInventory(items);
     } catch (inventoryError) {
       setInventory([]);
-      setError(errorText(inventoryError));
+      setError(inventoryErrorText(inventoryError));
     } finally {
       setLoadingInventory(false);
     }
@@ -296,7 +308,16 @@ export function Sell() {
             <div className="empty-state small">读取 Steam 库存…</div>
           ) : profileSteamId && inventory.length === 0 ? (
             <div className="empty-state small">
-              没有找到可交易 CS2 物品。检查库存是否公开、物品是否处于交易冷却。
+              {error ? (
+                <>
+                  <p>库存读取失败，请先处理上方错误。</p>
+                  <button className="button tiny" onClick={() => void loadInventory(profileSteamId)}>
+                    重新读取库存
+                  </button>
+                </>
+              ) : (
+                "没有找到可交易 CS2 物品。检查库存是否公开、物品是否处于交易冷却。"
+              )}
             </div>
           ) : (
             <div className="inventory-grid">
