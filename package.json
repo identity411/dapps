@@ -1,12 +1,29 @@
 {
-  "name": "dapps",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "skinpact",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SkinPact: testnet escrow marketplace for CS2 skins",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "contracts",
+    "relay",
+    "helper",
+    "web"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "stage0:check": "node scripts/stage0/check-env.mjs",
-    "stage0:helper": "node scripts/stage0/seller-helper.mjs"
+    "stage0:helper": "node scripts/stage0/seller-helper.mjs",
+    "compile": "npm run compile -w @skinpact/contracts",
+    "chain": "npm run node -w @skinpact/contracts",
+    "deploy:local": "npm run deploy:local -w @skinpact/contracts",
+    "relay": "npm run dev -w @skinpact/relay",
+    "web": "npm run dev -w @skinpact/web",
+    "helper": "npm run start -w @skinpact/helper",
+    "test": "npm run test -w @skinpact/shared && npm run test -w @skinpact/contracts && npm run test -w @skinpact/relay && npm run test -w @skinpact/helper",
+    "build": "npm run build -w @skinpact/web",
+    "e2e:local": "npm run compile && tsx scripts/e2e-local.ts",
+    "typecheck": "npm run typecheck -w @skinpact/shared && npm run typecheck -w @skinpact/relay && npm run typecheck -w @skinpact/helper && npm run typecheck -w @skinpact/web && tsc -p scripts/tsconfig.json"
   },
   "repository": {
     "type": "git",
@@ -19,11 +36,18 @@
     "url": "https://github.com/identity411/dapps/issues"
   },
   "homepage": "https://github.com/identity411/dapps#readme",
-  "type": "module",
   "dependencies": {
     "qrcode": "^1.5.4",
     "steam-session": "^1.9.4",
     "steam-tradeoffer-manager": "^2.13.0",
     "steamcommunity": "^3.50.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

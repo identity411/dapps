@@ -7,8 +7,28 @@
 node_modules/
 dist/
 coverage/
+*.tsbuildinfo
 .DS_Store
+
+# Hardhat local build output (regenerate with npm run compile)
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+
+# local deployment address is re-created on every chain restart
+deployments/local.json
+
+# Relay SQLite / WAL files
+data/
+relay/data/
+*.db
+*.db-shm
+*.db-wal
 
 # Stage 0 local Steam helper session (sensitive)
 .steam-helper-session.json
 .steam-helper-qr.*
+
+# S1 seller-local helper state (helper token, Steam refresh token, QR, ledger)
+helper/.skinpact-helper/
+.skinpact-helper/
