@@ -32,6 +32,10 @@ export class RelayClient {
     this.token = token;
   }
 
+  clearToken(): void {
+    this.token = null;
+  }
+
   hasToken(): boolean {
     return Boolean(this.token);
   }

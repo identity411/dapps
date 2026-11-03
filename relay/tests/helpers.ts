@@ -5,6 +5,7 @@ import type { Listing } from "@skinpact/shared";
 import { ListingStatus } from "@skinpact/shared";
 import type { ChainReader } from "../src/chain.js";
 import type { InventoryProvider, SteamItem } from "../src/inventory.js";
+import type { SteamProfile, SteamProfileProvider } from "../src/steam-profile.js";
 import type { RelayConfig } from "../src/config.js";
 import { createDb, type DB } from "../src/db.js";
 import { createApp } from "../src/app.js";
@@ -82,6 +83,22 @@ export class FakeInventory implements InventoryProvider {
   }
 }
 
+export class FakeSteamProfiles implements SteamProfileProvider {
+  public profiles = new Map<string, SteamProfile>();
+  public fail = false;
+
+  async getProfile(steamId64: string): Promise<SteamProfile> {
+    if (this.fail) throw new Error("steam profile unavailable");
+    return (
+      this.profiles.get(steamId64) ?? {
+        steamId64,
+        nickname: `Steam ${steamId64.slice(-6)}`,
+        avatarUrl: null,
+      }
+    );
+  }
+}
+
 export function testConfig(overrides: Partial<RelayConfig> = {}): RelayConfig {
   return {
     port: 0,
@@ -105,6 +122,7 @@ export interface TestHarness {
   db: DB;
   chain: FakeChain;
   inventory: FakeInventory;
+  steamProfiles: FakeSteamProfiles;
   config: RelayConfig;
   seller: HDNodeWallet;
   buyer: HDNodeWallet;
@@ -128,11 +146,23 @@ export async function makeHarness(): Promise<TestHarness> {
   const chain = new FakeChain();
   const inventory = new FakeInventory();
   inventory.items = [ITEM];
+  const steamProfiles = new FakeSteamProfiles();
   const config = testConfig();
-  const app = createApp({ db, chain, inventory, config });
+  const app = createApp({ db, chain, inventory, steamProfiles, config });
   const seller = Wallet.createRandom();
   const buyer = Wallet.createRandom();
   const sellerToken = await login(app, seller);
   const buyerToken = await login(app, buyer);
-  return { app, db, chain, inventory, config, seller, buyer, sellerToken, buyerToken };
+  return {
+    app,
+    db,
+    chain,
+    inventory,
+    steamProfiles,
+    config,
+    seller,
+    buyer,
+    sellerToken,
+    buyerToken,
+  };
 }

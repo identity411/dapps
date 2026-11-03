@@ -19,6 +19,32 @@ export function steamId64FromPartner(partner: string): string {
   return (STEAMID64_BASE + BigInt(partner)).toString();
 }
 
+/**
+ * Accepts a SteamID64 or a numeric Steam profile/inventory URL.
+ * Vanity URLs are rejected because resolving them requires an extra Steam lookup.
+ */
+export function parseSteamInventoryId(raw: string): string {
+  const text = String(raw || "").trim();
+  if (!text) throw new Error("Steam inventory ID is required");
+  if (isSteamId64(text)) return text;
+  if (text.length > 4096) throw new Error("Steam inventory ID input is too long");
+
+  let url: URL;
+  try {
+    url = new URL(text);
+  } catch {
+    throw new Error("Enter a SteamID64 or a numeric Steam profile/inventory URL");
+  }
+  if (url.protocol !== "https:" || url.hostname !== "steamcommunity.com") {
+    throw new Error("Inventory URL must be https://steamcommunity.com/profiles/<SteamID64>/...");
+  }
+  const match = /^\/profiles\/(\d{17})(?:\/inventory\/?)?\/?$/.exec(url.pathname);
+  if (!match) {
+    throw new Error("Use a numeric /profiles/<SteamID64>/inventory/ URL or the SteamID64 itself");
+  }
+  return match[1]!;
+}
+
 export function parseTradeUrl(raw: string): ParsedTradeUrl {
   const text = String(raw || "").trim();
   if (!text) throw new Error("Trade URL is required");

@@ -8,6 +8,7 @@ import {
   itemHash,
   offerIdHash,
   evidenceHash,
+  parseSteamInventoryId,
   parseTradeUrl,
   type ItemMetadata,
   type OfferEvidence,
@@ -27,6 +28,11 @@ import type { ChainReader } from "./chain.js";
 import type { InventoryProvider, SteamItem } from "./inventory.js";
 import { findInventoryItem } from "./inventory.js";
 import {
+  SteamCommunityProfileProvider,
+  type SteamProfile,
+  type SteamProfileProvider,
+} from "./steam-profile.js";
+import {
   HttpError,
   asyncHandler,
   bearer,
@@ -42,6 +48,7 @@ export interface AppDeps {
   db: DB;
   chain: ChainReader;
   inventory: InventoryProvider;
+  steamProfiles?: SteamProfileProvider;
   config: RelayConfig;
   now?: () => number;
 }
@@ -89,6 +96,28 @@ interface BuyerUrlRow {
   created_at: number;
   updated_at: number;
   revealed_at: number | null;
+}
+
+interface BuyerSteamAccountRow {
+  id: string;
+  owner_address: string;
+  steam_id: string;
+  inventory_id: string;
+  nickname: string;
+  avatar_url: string | null;
+  ciphertext: string;
+  iv: string;
+  tag: string;
+  created_at: number;
+  updated_at: number;
+}
+
+interface BuyerAccountLinkRow {
+  buyer_steam_id: string;
+  account_id: string | null;
+  inventory_id: string | null;
+  nickname: string | null;
+  avatar_url: string | null;
 }
 
 interface OfferRow {
@@ -168,6 +197,22 @@ function publicMetadata(row: MetadataRow) {
   };
 }
 
+function publicSteamAccount(row: BuyerSteamAccountRow) {
+  return {
+    id: row.id,
+    steamId64: row.steam_id,
+    inventoryId: row.inventory_id,
+    nickname: row.nickname,
+    avatarUrl: row.avatar_url,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function profileFallback(steamId64: string): SteamProfile {
+  return { steamId64, nickname: `Steam ${steamId64.slice(-6)}`, avatarUrl: null };
+}
+
 function itemFromInventory(item: SteamItem, sellerSteamId: string): ItemMetadata {
   return {
     sellerSteamId,
@@ -216,6 +261,7 @@ function rateLimiter(max: number, windowMs: number) {
 
 export function createApp(deps: AppDeps): express.Express {
   const { db, chain, inventory, config } = deps;
+  const steamProfiles = deps.steamProfiles ?? new SteamCommunityProfileProvider();
   const now = deps.now ?? (() => Date.now());
   const app = express();
   app.disable("x-powered-by");
@@ -229,6 +275,7 @@ export function createApp(deps: AppDeps): express.Express {
   const authRateLimit = rateLimiter(30, 60_000);
   const pairRateLimit = rateLimiter(10, 60_000);
   const inventoryRateLimit = rateLimiter(60, 60_000);
+  const steamAccountRateLimit = rateLimiter(30, 60_000);
 
   function requireAuth(req: Request): string {
     const address = readJwt(req, config);
@@ -331,6 +378,106 @@ export function createApp(deps: AppDeps): express.Express {
          ON CONFLICT(address) DO UPDATE SET steam_id = excluded.steam_id, updated_at = excluded.updated_at`,
       ).run(address, steamId64, timestamp, timestamp);
       res.json({ address, steamId64 });
+    }),
+  );
+
+  app.get(
+    "/steam-accounts",
+    asyncHandler(async (req, res) => {
+      const address = requireAuth(req);
+      const rows = db
+        .prepare(
+          "SELECT * FROM buyer_steam_accounts WHERE owner_address = ? ORDER BY updated_at DESC",
+        )
+        .all(address) as BuyerSteamAccountRow[];
+      noStore(res);
+      res.json({ accounts: rows.map(publicSteamAccount) });
+    }),
+  );
+
+  app.post(
+    "/steam-accounts",
+    steamAccountRateLimit,
+    asyncHandler(async (req, res) => {
+      const address = requireAuth(req);
+      const rawUrl = requireString(req.body?.tradeUrl, "tradeUrl", 4096);
+      const inventoryInput = requireString(req.body?.inventoryId, "inventoryId", 4096);
+
+      let parsed: ReturnType<typeof parseTradeUrl>;
+      try {
+        parsed = parseTradeUrl(rawUrl);
+      } catch {
+        throw new HttpError(422, "trade_url_invalid");
+      }
+
+      let inventorySteamId: string;
+      try {
+        inventorySteamId = parseSteamInventoryId(inventoryInput);
+      } catch {
+        throw new HttpError(422, "inventory_id_invalid");
+      }
+      if (inventorySteamId !== parsed.steamId64) {
+        throw new HttpError(422, "steam_account_mismatch");
+      }
+
+      let profile: SteamProfile;
+      try {
+        profile = await steamProfiles.getProfile(parsed.steamId64);
+      } catch {
+        // The account is still usable if Steam's public profile page is
+        // unavailable; the UI falls back to the SteamID64.
+        profile = profileFallback(parsed.steamId64);
+      }
+
+      const encrypted = encryptString(parsed.raw, config.encryptionKey);
+      const timestamp = now();
+      db.prepare(
+        `INSERT INTO buyer_steam_accounts
+          (id, owner_address, steam_id, inventory_id, nickname, avatar_url, ciphertext, iv, tag,
+           created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(owner_address, steam_id) DO UPDATE SET
+           inventory_id = excluded.inventory_id,
+           nickname = excluded.nickname,
+           avatar_url = excluded.avatar_url,
+           ciphertext = excluded.ciphertext,
+           iv = excluded.iv,
+           tag = excluded.tag,
+           updated_at = excluded.updated_at`,
+      ).run(
+        randomToken("bsa_"),
+        address,
+        parsed.steamId64,
+        inventorySteamId,
+        profile.nickname,
+        profile.avatarUrl,
+        encrypted.ciphertext,
+        encrypted.iv,
+        encrypted.tag,
+        timestamp,
+        timestamp,
+      );
+
+      const row = db
+        .prepare("SELECT * FROM buyer_steam_accounts WHERE owner_address = ? AND steam_id = ?")
+        .get(address, parsed.steamId64) as BuyerSteamAccountRow;
+      noStore(res);
+      res.json({ account: publicSteamAccount(row) });
+    }),
+  );
+
+  app.delete(
+    "/steam-accounts/:accountId",
+    steamAccountRateLimit,
+    asyncHandler(async (req, res) => {
+      const address = requireAuth(req);
+      const accountId = requireString(req.params.accountId, "accountId", 128);
+      const result = db
+        .prepare("DELETE FROM buyer_steam_accounts WHERE id = ? AND owner_address = ?")
+        .run(accountId, address);
+      if (result.changes !== 1) throw new HttpError(404, "steam_account_not_found");
+      noStore(res);
+      res.json({ ok: true });
     }),
   );
 
@@ -438,18 +585,76 @@ export function createApp(deps: AppDeps): express.Express {
     }),
   );
 
+  app.get(
+    "/listings/:listingId/buyer-account",
+    asyncHandler(async (req, res) => {
+      const address = requireAuth(req);
+      const listingId = requireListingId(req.params.listingId);
+      const listing = await chain.getListing(listingId);
+      if (listing.status === ListingStatus.None) throw new HttpError(404, "listing_not_found");
+      if (listing.status !== ListingStatus.Active && listing.buyer.toLowerCase() !== address) {
+        throw new HttpError(403, "not_buyer");
+      }
+
+      const row = db
+        .prepare(
+          `SELECT b.buyer_steam_id, a.id AS account_id, a.inventory_id, a.nickname, a.avatar_url
+           FROM buyer_urls b
+           LEFT JOIN buyer_steam_accounts a
+             ON a.owner_address = b.buyer_address AND a.steam_id = b.buyer_steam_id
+           WHERE b.listing_id = ? AND b.buyer_address = ?`,
+        )
+        .get(listingId, address) as BuyerAccountLinkRow | undefined;
+
+      noStore(res);
+      if (!row) {
+        res.json({ linked: false });
+        return;
+      }
+      res.json({
+        linked: true,
+        steamAccountId: row.account_id,
+        steamId64: row.buyer_steam_id,
+        inventoryId: row.inventory_id,
+        nickname: row.nickname,
+        avatarUrl: row.avatar_url,
+      });
+    }),
+  );
+
   app.put(
     "/listings/:listingId/buyer-trade-url",
     asyncHandler(async (req, res) => {
       const address = requireAuth(req);
       const listingId = requireListingId(req.params.listingId);
-      const rawUrl = requireString(req.body?.tradeUrl, "tradeUrl", 4096);
 
-      let parsed: ReturnType<typeof parseTradeUrl>;
-      try {
-        parsed = parseTradeUrl(rawUrl);
-      } catch {
-        throw new HttpError(422, "trade_url_invalid");
+      const steamAccountInput = req.body?.steamAccountId;
+      let savedAccount: BuyerSteamAccountRow | undefined;
+      let encrypted: { ciphertext: string; iv: string; tag: string };
+      let buyerSteamId: string;
+
+      if (steamAccountInput !== undefined && steamAccountInput !== null) {
+        const accountId = requireString(steamAccountInput, "steamAccountId", 128);
+        savedAccount = db
+          .prepare("SELECT * FROM buyer_steam_accounts WHERE id = ? AND owner_address = ?")
+          .get(accountId, address) as BuyerSteamAccountRow | undefined;
+        if (!savedAccount) throw new HttpError(404, "steam_account_not_found");
+        encrypted = {
+          ciphertext: savedAccount.ciphertext,
+          iv: savedAccount.iv,
+          tag: savedAccount.tag,
+        };
+        buyerSteamId = savedAccount.steam_id;
+      } else {
+        const rawUrl = requireString(req.body?.tradeUrl, "tradeUrl", 4096);
+        let parsed: ReturnType<typeof parseTradeUrl>;
+        try {
+          parsed = parseTradeUrl(rawUrl);
+        } catch {
+          throw new HttpError(422, "trade_url_invalid");
+        }
+        encrypted = encryptString(parsed.raw, config.encryptionKey);
+        buyerSteamId = parsed.steamId64;
       }
 
       const listing = await chain.getListing(listingId);
@@ -462,7 +667,6 @@ export function createApp(deps: AppDeps): express.Express {
         throw new HttpError(409, "listing_not_accepting_trade_url");
       }
 
-      const encrypted = encryptString(parsed.raw, config.encryptionKey);
       const timestamp = now();
       db.prepare(
         `INSERT INTO buyer_urls (listing_id, buyer_address, buyer_steam_id, ciphertext, iv, tag,
@@ -475,7 +679,7 @@ export function createApp(deps: AppDeps): express.Express {
       ).run(
         listingId,
         address,
-        parsed.steamId64,
+        buyerSteamId,
         encrypted.ciphertext,
         encrypted.iv,
         encrypted.tag,
@@ -483,7 +687,12 @@ export function createApp(deps: AppDeps): express.Express {
         timestamp,
       );
       noStore(res);
-      res.json({ ok: true, listingId, buyerSteamId: parsed.steamId64 });
+      res.json({
+        ok: true,
+        listingId,
+        buyerSteamId,
+        steamAccountId: savedAccount?.id ?? null,
+      });
     }),
   );
 

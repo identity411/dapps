@@ -70,6 +70,8 @@ export function Header() {
 
       <nav className="nav">
         <a href="#/market">Market</a>
+        <a href="#/orders">Orders</a>
+        <a href="#/accounts">Steam 账户</a>
         <a href="#/sell">Sell</a>
       </nav>
 

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { Accounts } from "./Accounts";
 import { Header } from "./Header";
 import { Market } from "./Market";
 import { OrderRoom } from "./OrderRoom";
+import { Orders } from "./Orders";
 import { Sell } from "./Sell";
 import { CONTRACT_CONFIGURED, CHAIN_ID } from "./config";
 import { useWallet } from "./wallet";
@@ -25,6 +27,8 @@ export function App() {
 
   let page;
   if (route === "/market") page = <Market />;
+  else if (route === "/orders") page = <Orders />;
+  else if (route === "/accounts") page = <Accounts />;
   else if (route === "/sell") page = <Sell />;
   else if (orderMatch) page = <OrderRoom listingId={orderMatch[1]!} />;
   else {
@@ -32,7 +36,7 @@ export function App() {
       <section className="page narrow">
         <div className="empty-state">
           <h1>Page not found</h1>
-          <p>这个本地 S1 演示只有 Market、Sell 和 Trade Room。</p>
+          <p>这个本地 S1 演示只有 Market、Orders、Accounts、Sell 和 Trade Room。</p>
           <a className="button primary" href="#/market">返回市场</a>
         </div>
       </section>

@@ -29,13 +29,14 @@
 | A4 | `markOfferSent` 只是声明，**不放款**；buyer confirm、seller claim/finalize、无 offer expire 三条路径可走通 | 合约测试 + 本地 E2E |
 | A5 | 前端可用 MetaMask 完成 create/buy/order 动作，状态以链上为准 | 手动 UI 检查 + build |
 | A6 | 全仓测试可重复、无 Trade URL/Steam session 泄露 | `npm test` 绿 + 安全测试 |
+| A7 | 一个钱包可保存多个买家 Steam 账户；购买时选择头像/昵称即可复用，无需重复粘贴 Trade URL | Relay 账户隔离/加密测试 + UI 走查 |
 
 ### 1.2 In scope
 
 - 合约：`createListing`、`buy`、`markOfferSent`、`confirmReceipt`、`claimAccepted`、`finalizeClaim`、`expireOrder`、`withdraw`。
-- Relay：钱包登录、卖家 SteamID/库存/元数据、Buyer Trade URL 加密 vault、helper 配对、offer/证据上报、链上状态校验。
+- Relay：钱包登录、卖家 SteamID/库存/元数据、Buyer Trade URL 加密 vault、按钱包保存的买家 Steam 账户、helper 配对、offer/证据上报、链上状态校验。
 - Helper：QR 登录、从 Relay 取 Funded 订单、发 offer、观察 `Accepted(3)`、上传证据；**不签链上交易**。
-- 前端：钱包连接、本地市场、卖品、最小订单页（Trade Room 雏形）、withdraw。
+- 前端：钱包连接、本地市场、卖品、最小订单页（Trade Room 雏形）、Accounts 页与订单内买家 Steam 账户选择（头像/昵称）、withdraw。
 - 测试：合约单测/状态不变量、Relay 权限/加密测试、helper 单元测试、本地链三路径 E2E、一次真实 Steam 手动测试。
 
 ### 1.3 Out of scope（S1 不做）
@@ -64,7 +65,7 @@ sequenceDiagram
     Seller->>Relay: 钱包登录 + 绑定 SteamID64 + 准备物品元数据
     Relay-->>Seller: itemHash + 脱敏 metadata
     Seller->>Contract: createListing(itemHash, price) + bond
-    Buyer->>Relay: 钱包登录 + 提交自己的 Trade URL
+    Buyer->>Relay: 钱包登录 + 选择已保存的 Steam 账户并关联订单
     Buyer->>Contract: buy(listingId) + price
     Contract-->>Relay: Funded（链上读取，不信任前端）
     Helper->>Relay: pairing code 换 helper token；拉取 Funded 订单
@@ -235,7 +236,11 @@ struct Listing {
 | `GET /metadata/:itemHash` | public | 市场展示元数据；不返回 Trade URL |
 | `POST /helper/pairing-code` | Seller JWT | 生成短时一次性配对码；只存 hash |
 | `POST /helper/pair` | pairing code | 换 helper token（绑定 seller address）；一次性、限速 |
-| `PUT /listings/:id/buyer-trade-url` | Buyer JWT | 解析 partner/token；listings 必须 Active，或 Funded 且链上 buyer 匹配；OfferSent/终态拒绝 |
+| `GET /steam-accounts` | Buyer JWT | 只返回当前钱包保存的账户公开信息（ID、SteamID64、昵称、头像）；**不返回 Trade URL** |
+| `POST /steam-accounts` | Buyer JWT | 接收 `{tradeUrl, inventoryId}`；校验 Trade URL 与库存 ID 属于同一 Steam 账户；加密保存并按 `(wallet, steamId64)` upsert |
+| `DELETE /steam-accounts/:accountId` | Buyer JWT | 仅能删除当前钱包的账户；删除不清理已关联订单的加密 URL |
+| `GET /listings/:id/buyer-account` | Buyer JWT | 仅返回调用钱包自己的关联结果与公开账户信息；不返回 URL；非 Active 时仅链上 buyer 可读 |
+| `PUT /listings/:id/buyer-trade-url` | Buyer JWT | 接受 `{steamAccountId}` 或兼容的 `{tradeUrl}`；账户必须属于当前钱包；listings 必须 Active，或 Funded 且链上 buyer 匹配；OfferSent/终态拒绝 |
 | `GET /listings/:id/buyer-trade-url` | Seller JWT | 仅 `Funded` 且 seller 匹配；手动排障 fallback；不缓存、不写日志、不在 Web UI 展示 |
 | `GET /helper/orders?status=funded` | Helper token | 该 seller 的 Funded 订单；返回 Buyer URL、buyerSteamId、item 数据；链上复核 seller/status |
 | `POST /helper/listings/:id/offer` | Helper token | 上报 `{tradeofferId, offerUrl}`；链上必须 Funded 且 seller 匹配；存 hash/加密证据 |
@@ -244,15 +249,29 @@ struct Listing {
 | 后台 watcher | Relay | 终态删除 Buyer URL；链上状态不一致时拒绝 reveal |
 
 - Relay **不提供**买家自行读取别人 Trade URL 的接口；正常路径只走 helper。Seller UI 不显示完整 URL；S1 的 seller-only URL 接口只作为本地排障 fallback，不在 Web UI 暴露。
-- 买家可在 `buy` 之前提交 URL；但如果最终不是该钱包购买，Relay 在 reveal 时发现链上 buyer 不匹配，拒绝提供。买家也可以在 Funded 后补交，直到 `OfferSent` 前。
+- 买家在 Web 中保存的是账户级 Trade URL；购买时选择账户后，先由 Relay 将其复制到该 listing 的 `buyer_urls`，再调用 `buy`。若最终不是该钱包购买，Relay 在 reveal 时发现链上 buyer 不匹配，拒绝提供。买家也可以在 Funded 后补关联，直到 `OfferSent` 前。
 - `GET /helper/orders` 的 Buyer URL 只放入响应体；不记录 query/body；helper 端也不落盘。
+
+Helper 另外在 **`127.0.0.1:8788`** 暴露仅本机可用的控制 API，供 Seller Web 显示 QR 并自动配对（不属于 Relay）：
+
+| 方法/路径 | 作用 |
+|---|---|
+| `GET /api/health` | 本机 helper 存活 |
+| `GET /api/status` | 配对/Steam 登录/Relay profile 是否匹配；**不含 token/QR** |
+| `POST /api/pair` | Web 把 Relay 一次性配对码直接交给本机 helper；用户不需要看到/复制 |
+| `POST /api/login/start` | 尝试本地 refresh token，否则返回 Steam QR data URL；**不返回 cookies/refresh token** |
+| `GET /api/login/status` | 扫码登录结果（SteamID64、profile 匹配状态）；**不含 QR** |
+
+- 只绑定 loopback；CORS 只允许 `localhost:5173` / `127.0.0.1:5173`；同时校验 `Host` 为 loopback，拒绝 DNS rebinding 与外部 origin。
+- QR 是一次性登录凭证，只在本地 helper 响应与本机页面内存中出现，不写 Relay、不写日志、不落盘。
+- Web 只拿到公开的 SteamID64 和 QR 图片；Steam cookies/refresh token 永远留在 helper 进程与本地 600 文件。
 
 ### 4.3 鉴权
 
 - Web：`nonce + EIP-191` 钱包签名换 JWT（1h）；消息包含 `domain, address, chainId=31337, nonce, issuedAt`，防重放。
-- Helper：卖家在 Web 生成 6 位一次性 pairing code（5 分钟、限速、hash 存储），helper 用它换 **scoped helper token**（8h、只属于该 seller、只可访问 `/helper/*`）。helper **不持有卖家私钥**，不能签合约交易。
+- Helper：Web 用 Seller JWT 生成 6 位一次性 pairing code（5 分钟、限速、hash 存储），并通过 loopback 自动提交给本机 helper；用户看不到/不复制。helper 用它换 **scoped helper token**（8h、只属于该 seller、只可访问 `/helper/*`）。helper **不持有卖家私钥**，不能签合约交易。
 - Helper token 存本地 `helper-session.json`（600、gitignore）；Steam session 另存，二者都不发给 Relay。
-- JWT/helper token/配对码都不得写入日志。
+- JWT/helper token/配对码/QR/cookies 都不得写入日志。
 
 ### 4.4 Buyer URL vault
 
@@ -262,10 +281,12 @@ struct Listing {
 - 终态（Completed/Refunded）由 watcher 删除记录；删除前有审计计数，但不存明文。
 - 日志中间件对 `tradeUrl/token/authorization/cookie` 做 redaction；错误响应不回显请求 body。
 - 更新 URL：Active/Funded 且未 OfferSent 允许覆盖；每次覆盖审计，不保留旧明文。
+- 买家 Steam 账户：保存时同样只存 AES-256-GCM 密文；`GET /steam-accounts` 返回公开的昵称/头像/SteamID64，永不返回 URL。关联 listing 时复制密文到 `buyer_urls`，helper reveal 逻辑不变。
+- 账户列表按 `owner_address` 隔离；关联/删除必须同时匹配当前钱包，防止跨钱包使用或删除。
 
 ### 4.5 数据与链上一致性
 
-- SQLite（`better-sqlite3`）+ 迁移；最小表：`profiles`、`metadata`、`buyer_urls`、`helper_pairings`、`helper_sessions`、`offers`、`evidence`、`nonces`。
+- SQLite（`better-sqlite3`）+ 迁移；最小表：`profiles`、`metadata`、`buyer_urls`、`buyer_steam_accounts`、`helper_pairings`、`helper_sessions`、`offers`、`evidence`、`nonces`。
 - Relay 保存最小 listing 映射（seller、itemHash、buyer、状态缓存），但每次敏感操作前重新读链；缓存不得作为 reveal 依据。
 - `metadata` 按 `itemHash` 存；前端从链上拿 listing，再用 hash 取 metadata。链上不存图片/大 JSON。
 - 证据只存加密 blob + hash + observedAt；S1 不做 Arbiter 查询接口。
@@ -273,19 +294,21 @@ struct Listing {
 ### 4.6 运行配置
 
 - `RPC_URL`、`CONTRACT_ADDRESS`、`CHAIN_ID=31337`、`RELAY_ENCRYPTION_KEY`、`JWT_SECRET`、`WEB_ORIGIN`；全部 env，不提交真实值。
+- Helper 本机 API：`HELPER_API_PORT=8788`、`HELPER_WEB_ORIGINS`（默认两个 loopback Web origin）；Web 侧 `VITE_HELPER_URL`。
 - CORS 只允许本地 web origin；基础 rate limit；TLS 不是本地必需，但 S2 部署必须。
 
 ---
 
 ## 5. Helper（S1 最小版）
 
-### 5.1 启动与配对
+### 5.1 启动、扫码与配对
 
-1. 卖家在 Web 生成 pairing code。
-2. helper 用 code 换 helper token；**不接收卖家私钥**。
-3. helper QR 登录卖家 Steam（`steam-session`）；refresh token 仅存本地，600、gitignore。
-4. helper 校验登录的 SteamID64 与 Relay profile 的 sellerSteamId 一致；不一致拒绝。
-5. helper 轮询 `/helper/orders?status=funded`。
+1. 卖家在一个终端运行 `npm run helper`；helper 启动本机 `127.0.0.1:8788` API，不阻塞等待配对。
+2. Seller Web 完成钱包签名后，自动向 Relay 申请一次性 pairing code，并通过 loopback 提交给 helper；helper 换取 helper token。用户不看到配对码。
+3. Web 调用 `POST /api/login/start`；helper 先尝试本地 refresh token，没有可用登录态才生成 QR data URL。
+4. 卖家使用 Steam 手机令牌扫码；helper 安装 Steam cookies/trade manager，只把公开的 SteamID64 通过状态接口返回 Web。
+5. Web 用钱包 JWT 把该 SteamID64 写入 Relay profile；helper 周期校验 Relay profile 与自身登录账号一致。
+6. 校验通过后 helper 才开始轮询 `/helper/orders?status=funded`；不一致或未绑定则不发任何 offer。
 
 ### 5.2 发 offer
 
@@ -336,7 +359,7 @@ struct Listing {
 | Order/Trade Room | 提交/更新 Buyer URL；`buy`；seller `markOfferSent`；buyer `confirmReceipt`；seller `claimAccepted`；任何人 `finalizeClaim`/`expireOrder`；显示 deadlines/状态 |
 | Header | 连接钱包、网络、withdrawable、`withdraw` |
 
-- Buyer 的 Trade URL 输入框只在 Active/Funded 且未 OfferSent 显示；提交后提示“只有卖家 helper 可见”，前端不缓存明文。
+- Buyer 可在 Accounts 页或 Active 订单中管理/选择已保存的 Steam 账户（头像/昵称/SteamID64）；添加时输入 Trade URL + 库存 ID / SteamID64。Buy 会先关联账户再付款，未选择账户时禁用购买。Funded 订单若缺少关联，可在 OfferSent 前补充。前端不缓存明文，API 不返回明文。
 - Seller 的标记动作显示 `offerIdHash`（来自 Relay report）和截止倒计时；“mark 不放款”写进确认文案。
 - Buyer 页面显示“**等卖家 mark 后再接受 Steam offer**”；如果买家先接受、卖家未及时 mark，链上仍可能被 expire，S1 不做自动补救。
 - Buyer confirm 必须勾选“我已在 Steam 收到物品”；终局不可撤销；`Funded` 直接 confirm 额外警告。

@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
-import { ListingStatus, parseTradeUrl, type Listing } from "@skinpact/shared";
+import { ListingStatus, type Listing } from "@skinpact/shared";
 import { CHAIN_ID, CONTRACT_CONFIGURED } from "./config";
 import { getSignerContract, readListing } from "./contract";
 import { useNow } from "./hooks";
 import {
   RelayError,
+  getBuyerAccountLink,
   getMetadata,
   getSellerReport,
-  submitBuyerTradeUrl,
+  linkSavedSteamAccount,
+  type BuyerAccountLink,
   type PublicMetadata,
   type SellerReport,
 } from "./relay";
+import { SteamAccountPicker, accountErrorText } from "./SteamAccountPicker";
 import { useWallet } from "./wallet";
 import {
   countdown,
@@ -52,9 +55,8 @@ export function OrderRoom({ listingId }: { listingId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState<string | null>(null);
-  const [tradeUrl, setTradeUrl] = useState("");
-  const [urlSaved, setUrlSaved] = useState(false);
-  const [savedBuyerSteamId, setSavedBuyerSteamId] = useState<string | null>(null);
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [linkedAccount, setLinkedAccount] = useState<BuyerAccountLink | null>(null);
   const [receiptAcknowledged, setReceiptAcknowledged] = useState(false);
 
   const refresh = useCallback(() => setReloadKey((value) => value + 1), []);
@@ -62,6 +64,11 @@ export function OrderRoom({ listingId }: { listingId: string }) {
   useEffect(() => {
     setReceiptAcknowledged(false);
   }, [listing?.status, account]);
+
+  useEffect(() => {
+    setSelectedAccountId(null);
+    setLinkedAccount(null);
+  }, [account]);
 
   useEffect(() => {
     if (!CONTRACT_CONFIGURED) {
@@ -106,6 +113,32 @@ export function OrderRoom({ listingId }: { listingId: string }) {
         } else if (!cancelled) {
           setReport(null);
         }
+
+        if (relayToken && account && !sameAddress(account, next.seller)) {
+          try {
+            const link = await getBuyerAccountLink(relayToken, listingId);
+            if (!cancelled) {
+              setLinkedAccount(link);
+              if (link.linked && link.steamAccountId) {
+                setSelectedAccountId((current) => current ?? link.steamAccountId);
+              }
+            }
+          } catch (linkError) {
+            if (!cancelled) {
+              setLinkedAccount(null);
+              if (
+                !(
+                  linkError instanceof RelayError &&
+                  [401, 403, 404, 409].includes(linkError.status)
+                )
+              ) {
+                setError(errorText(linkError));
+              }
+            }
+          }
+        } else if (!cancelled) {
+          setLinkedAccount(null);
+        }
       } catch (loadError) {
         if (!cancelled) setError(errorText(loadError));
       } finally {
@@ -136,28 +169,26 @@ export function OrderRoom({ listingId }: { listingId: string }) {
     }
   }
 
-  async function saveTradeUrl() {
+  async function linkSelectedAccount(): Promise<void> {
     if (!relayToken) {
-      setError("Relay 未登录。请先在右上角完成钱包签名登录。");
-      return;
+      throw new Error("Relay 未登录。请先在右上角完成钱包签名登录。");
     }
-    const raw = tradeUrl.trim();
-    if (!raw) {
-      setError("请粘贴完整的 Steam Trade URL。");
-      return;
+    if (!selectedAccountId) {
+      throw new Error("请先选择一个买家 Steam 账户。");
     }
     try {
-      parseTradeUrl(raw);
-    } catch {
-      setError("请输入有效的 Steam Trade URL（https://steamcommunity.com/tradeoffer/new/…，不是库存/profile 链接）。");
-      return;
+      // Always copy the current encrypted secret so an account whose URL was
+      // re-saved after a previous link cannot leave the order on a stale URL.
+      await linkSavedSteamAccount(relayToken, listingId, selectedAccountId);
+    } catch (error) {
+      throw new Error(accountErrorText(error));
     }
-    await runAction("save-url", async () => {
-      const result = await submitBuyerTradeUrl(relayToken, listingId, raw);
-      setTradeUrl("");
-      setUrlSaved(true);
-      setSavedBuyerSteamId(result.buyerSteamId);
-      setMessage("Trade URL 已加密保存到 Relay；只会在付款后向你的卖家/helper 揭示。");
+  }
+
+  async function saveSelectedAccountToOrder() {
+    await runAction("link-account", async () => {
+      await linkSelectedAccount();
+      setMessage("已把所选 Steam 账户加密关联到该订单；Trade URL 只会在付款后向卖家 helper 揭示。");
     });
   }
 
@@ -165,10 +196,12 @@ export function OrderRoom({ listingId }: { listingId: string }) {
     if (!signer || !listing) return;
     if (sameAddress(account, listing.seller)) return;
     await runAction("buy", async () => {
+      // Link before paying so a funded order can never lack delivery details.
+      await linkSelectedAccount();
       const contract = getSignerContract(signer);
       const tx = await contract.buy(BigInt(listingId), { value: listing.price });
       await tx.wait();
-      setMessage("已付款并锁定到合约。等待卖家本地 helper 发送 Steam offer。");
+      setMessage("所选 Steam 账户已关联订单，付款已锁定到合约。等待卖家本地 helper 发送 Steam offer。");
     });
   }
 
@@ -257,14 +290,11 @@ export function OrderRoom({ listingId }: { listingId: string }) {
   const offerOpen = !isPast(listing.offerDeadline);
   const challengeOpen = listing.challengeDeadline > 0n && !isPast(listing.challengeDeadline);
   const terminal = TERMINAL.has(listing.status);
-  const buyerUrlEditable =
-    listing.status === ListingStatus.Active || listing.status === ListingStatus.Funded;
-  const canConfirm =
-    isBuyer && !terminal && [
-      ListingStatus.Funded,
-      ListingStatus.OfferSent,
-      ListingStatus.ClaimPending,
-    ].includes(listing.status);
+  const selectedAccountLinked = Boolean(
+    linkedAccount?.linked &&
+      selectedAccountId &&
+      linkedAccount.steamAccountId === selectedAccountId,
+  );
   const offerHashMatches =
     report?.offer &&
     listing.offerIdHash !== `0x${"0".repeat(64)}` &&
@@ -410,53 +440,66 @@ export function OrderRoom({ listingId }: { listingId: string }) {
             {listing.status === ListingStatus.Active && account ? (
               <div className="action-block">
                 {isSeller ? (
-                  <p className="muted">
-                    等待买家。请先让 helper 保持在线：买家锁款后，helper 会读取其 Trade URL 并发送
-                    Steam offer。
-                  </p>
+                  <>
+                    <p className="muted">
+                      等待买家。请先让 helper 保持在线：买家锁款后，helper 会读取其 Trade URL 并发送
+                      Steam offer。
+                    </p>
+                    <p className="muted small">
+                      要自测买家流程：在 MetaMask 切到另一个本地账户（需有 test ETH），刷新本页后选择或添加
+                      买家 Steam 账户，再点购买。卖家钱包不能购买自己的 Listing。
+                    </p>
+                  </>
                 ) : (
                   <>
-                    {buyerUrlEditable ? (
-                      <div className="subpanel">
-                        <h3>1. 提交买家 Trade URL</h3>
-                        <p className="muted small">
-                          这是 bearer secret，只会加密保存，并在你付款后向卖家/helper 揭示。不要发送给其他人。
-                        </p>
-                        <input
-                          value={tradeUrl}
-                          onChange={(event) => setTradeUrl(event.target.value)}
-                          placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…&token=…"
-                          spellCheck={false}
-                          autoComplete="off"
-                        />
-                        <button className="button" disabled={!relayToken || actionBusy === "save-url"} onClick={() => void saveTradeUrl()}>
-                          {actionBusy === "save-url" ? "保存中…" : "加密保存 URL"}
-                        </button>
-                        {urlSaved ? <p className="ok-text small">已保存（SteamID64 {savedBuyerSteamId}）</p> : null}
-                        {!relayToken ? (
-                          <p className="warning-text small">
-                            Relay 未登录。请先完成钱包签名登录。
-                            {authState !== "signing" ? (
-                              <button className="link-button" onClick={() => void reauthenticate()}>钱包签名</button>
-                            ) : null}
-                          </p>
+                    {relayToken ? (
+                      <SteamAccountPicker
+                        token={relayToken}
+                        selectedId={selectedAccountId}
+                        onSelect={setSelectedAccountId}
+                        disabled={actionBusy !== null}
+                      />
+                    ) : (
+                      <div className="banner warn">
+                        Relay 未登录，无法读取或保存买家 Steam 账户。
+                        {authState !== "signing" ? (
+                          <button className="link-button" onClick={() => void reauthenticate()}>钱包签名</button>
                         ) : null}
                       </div>
+                    )}
+
+                    {selectedAccountLinked ? (
+                      <p className="ok-text small">所选 Steam 账户已关联本 Listing，无需再次填写 Trade URL。</p>
+                    ) : linkedAccount?.linked ? (
+                      <p className="warning-text small">
+                        本订单当前关联了另一个 Steam 账户；点击购买会改用所选账户（仅付款前允许更换）。
+                      </p>
                     ) : null}
 
-                    <h3>2. 付款并锁定 Price</h3>
+                    <h3>付款并锁定 Price</h3>
                     <p className="muted small">
                       付款后 10 分钟内卖家必须让 helper 发 offer 并 mark；否则任何人都能触发退款。S1
                       没有买家主动取消，请确认金额与物品。
                     </p>
                     <button
                       className="button primary wide"
-                      disabled={actionBusy === "buy" || wrongChain}
+                      disabled={
+                        actionBusy !== null ||
+                        wrongChain ||
+                        !relayToken ||
+                        !selectedAccountId
+                      }
                       onClick={() => void buy()}
                     >
                       {actionBusy === "buy" ? "等待交易…" : `Buy · ${formatEth(listing.price)} ETH`}
                     </button>
-                    {!urlSaved ? <p className="warning-text small">建议先保存 Trade URL；若未提交，卖家无法交付，10 分钟后只能退款。</p> : null}
+                    {!selectedAccountId ? (
+                      <p className="warning-text small">
+                        请先选择一个已保存的买家 Steam 账户。购买时会先加密关联 Trade URL 再付款，避免付款后无交付信息。
+                      </p>
+                    ) : !selectedAccountLinked ? (
+                      <p className="muted small">点击购买会先把所选账户关联到订单，再打开 MetaMask 付款。</p>
+                    ) : null}
                   </>
                 )}
               </div>
@@ -499,23 +542,72 @@ export function OrderRoom({ listingId }: { listingId: string }) {
                       等待卖家 mark 为 OfferSent 后，再接受 Steam offer。过早接受会跳过卖家的
                       Accepted 证据流程；若你确认已收到物品，仍可使用下方的确认收货。
                     </div>
-                    {buyerUrlEditable ? (
+                    {linkedAccount?.linked ? (
                       <div className="subpanel">
-                        <h3>买家 Trade URL</h3>
-                        <p className="muted small">若你付款前没有提交，现在仍可在 OfferSent 之前提交/更新。</p>
-                        <input
-                          value={tradeUrl}
-                          onChange={(event) => setTradeUrl(event.target.value)}
-                          placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…&token=…"
-                          spellCheck={false}
-                          autoComplete="off"
-                        />
-                        <button className="button" disabled={!relayToken || actionBusy === "save-url"} onClick={() => void saveTradeUrl()}>
-                          {actionBusy === "save-url" ? "保存中…" : "加密保存 URL"}
-                        </button>
-                        {urlSaved ? <p className="ok-text small">已保存（SteamID64 {savedBuyerSteamId}）</p> : null}
+                        <p className="ok-text small">
+                          已关联买家 Steam 账户{" "}
+                          {linkedAccount.nickname || `SteamID64 ${linkedAccount.steamId64}`}。
+                          helper 会使用该账户的加密 Trade URL 发送 offer。
+                        </p>
+                        {relayToken ? (
+                          <details>
+                            <summary className="muted small">更换/更新关联账户</summary>
+                            <p className="warning-text small">
+                              仅在 helper 尚未发送 Steam offer 时使用。若卖家已在 Steam 发送报价，
+                              更换账户会导致该报价作废；请先联系卖家。
+                            </p>
+                            <SteamAccountPicker
+                              token={relayToken}
+                              selectedId={selectedAccountId}
+                              onSelect={setSelectedAccountId}
+                              disabled={actionBusy !== null}
+                            />
+                            <button
+                              type="button"
+                              className="button wide"
+                              disabled={!selectedAccountId || actionBusy !== null}
+                              onClick={() => void saveSelectedAccountToOrder()}
+                            >
+                              {actionBusy === "link-account"
+                                ? "更新中…"
+                                : "更新订单关联账户"}
+                            </button>
+                          </details>
+                        ) : null}
                       </div>
-                    ) : null}
+                    ) : linkedAccount?.linked === false ? (
+                      <div className="subpanel">
+                        <h3>补充买家 Steam 账户</h3>
+                        <p className="muted small">
+                          你付款时没有关联 Trade URL。请在卖家发送 offer 前选择/添加账户并关联；若
+                          helper 已经发送 offer，请勿更换账户，否则无法按原报价交付。
+                        </p>
+                        {relayToken ? (
+                          <>
+                            <SteamAccountPicker
+                              token={relayToken}
+                              selectedId={selectedAccountId}
+                              onSelect={setSelectedAccountId}
+                              disabled={actionBusy !== null}
+                            />
+                            <button
+                              type="button"
+                              className="button wide"
+                              disabled={!selectedAccountId || actionBusy !== null}
+                              onClick={() => void saveSelectedAccountToOrder()}
+                            >
+                              {actionBusy === "link-account"
+                                ? "关联中…"
+                                : "关联所选账户到订单"}
+                            </button>
+                          </>
+                        ) : (
+                          <p className="warning-text small">Relay 未登录，请先完成钱包签名登录。</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="muted small">正在读取订单关联的买家 Steam 账户…</p>
+                    )}
                     <div className="kv"><span>卖家 offer deadline</span><strong>{offerOpen ? countdown(listing.offerDeadline, now) : "已过期，可退款"}</strong></div>
                     <label className="checkline">
                       <input

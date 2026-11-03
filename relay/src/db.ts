@@ -48,6 +48,21 @@ export function createDb(filename: string): DB {
       PRIMARY KEY (listing_id, buyer_address)
     );
 
+    CREATE TABLE IF NOT EXISTS buyer_steam_accounts (
+      id TEXT PRIMARY KEY,
+      owner_address TEXT NOT NULL,
+      steam_id TEXT NOT NULL,
+      inventory_id TEXT NOT NULL,
+      nickname TEXT NOT NULL,
+      avatar_url TEXT,
+      ciphertext TEXT NOT NULL,
+      iv TEXT NOT NULL,
+      tag TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      UNIQUE(owner_address, steam_id)
+    );
+
     CREATE TABLE IF NOT EXISTS helper_pairings (
       code_hash TEXT PRIMARY KEY,
       seller_address TEXT NOT NULL,
@@ -90,6 +105,8 @@ export function createDb(filename: string): DB {
 
     CREATE INDEX IF NOT EXISTS idx_metadata_seller ON metadata(seller_address);
     CREATE INDEX IF NOT EXISTS idx_buyer_urls_listing ON buyer_urls(listing_id);
+    CREATE INDEX IF NOT EXISTS idx_buyer_steam_accounts_owner
+      ON buyer_steam_accounts(owner_address);
     CREATE INDEX IF NOT EXISTS idx_helper_sessions_seller ON helper_sessions(seller_address);
   `);
 

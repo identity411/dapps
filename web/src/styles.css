@@ -115,6 +115,7 @@ main { flex: 1; }
   margin-bottom: 1.6rem;
 }
 .room-heading { align-items: flex-start; }
+.orders-toolbar { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .eyebrow {
   margin: 0 0 0.35rem;
   color: var(--accent);
@@ -279,9 +280,12 @@ input:focus { outline: 2px solid rgba(103, 232, 165, 0.28); border-color: rgba(1
 .detail-grid > div:nth-child(3n + 1) { padding-left: 0; }
 .detail-grid strong, .detail-grid code, .detail-grid span:not(.label) { display: block; font-size: 0.76rem; overflow-wrap: anywhere; }
 
-.helper-panel { margin-top: 1rem; }
-.pairing-code { display: flex; align-items: center; gap: 0.65rem; background: rgba(103, 232, 165, 0.08); border: 1px solid rgba(103, 232, 165, 0.3); border-radius: var(--radius-sm); padding: 0.35rem 0.7rem; }
-.pairing-code strong { font-family: ui-monospace, monospace; font-size: 1.25rem; letter-spacing: 0.18em; color: var(--accent); }
+.helper-status { background: rgba(103, 232, 165, 0.06); border: 1px solid rgba(103, 232, 165, 0.26); border-radius: var(--radius-sm); padding: 0.75rem 0.9rem; }
+.helper-status p { margin: 0.3rem 0; }
+.qr-login { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 0.9rem; }
+.qr-login > div { flex: 1 1 200px; min-width: 0; }
+.qr-login p { margin: 0.45rem 0 0; }
+.steam-qr { width: 210px; height: 210px; padding: 0.5rem; background: #fff; border-radius: 10px; image-rendering: pixelated; }
 
 .timeline { display: flex; gap: 0.35rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.25rem; }
 .timeline-step { flex: 1; min-width: 100px; border: 1px solid var(--line); background: var(--bg-soft); border-radius: var(--radius-sm); padding: 0.5rem 0.6rem; opacity: 0.55; }
@@ -301,6 +305,35 @@ input:focus { outline: 2px solid rgba(103, 232, 165, 0.28); border-color: rgba(1
 .action-block:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
 .subpanel { border: 1px solid var(--line); background: var(--bg-soft); border-radius: var(--radius-sm); padding: 0.8rem; margin: 0.8rem 0; }
 .subpanel input { width: 100%; margin-bottom: 0.5rem; }
+.steam-account-panel { display: flex; flex-direction: column; gap: 0.6rem; }
+.subpanel details { margin-top: 0.35rem; }
+.subpanel summary { cursor: pointer; }
+.steam-account-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.8rem; flex-wrap: wrap; }
+.steam-account-heading h3 { margin-bottom: 0.2rem; }
+.steam-account-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.5rem; }
+.steam-account-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(13, 18, 26, 0.6);
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+.steam-account-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(103, 232, 165, 0.13); }
+.steam-account-main { display: flex; align-items: center; gap: 0.55rem; min-width: 0; cursor: pointer; flex: 1; }
+.steam-account-card.manage .steam-account-main { cursor: default; }
+.steam-account-main input { flex: 0 0 auto; width: 1rem; height: 1rem; accent-color: var(--accent); }
+.steam-avatar { width: 38px; height: 38px; flex: 0 0 auto; border-radius: 8px; object-fit: cover; background: #0d121a; border: 1px solid var(--line); }
+.steam-avatar.fallback { display: grid; place-items: center; font-weight: 800; color: var(--accent); }
+.steam-account-copy { display: flex; flex-direction: column; min-width: 0; gap: 0.1rem; }
+.steam-account-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88rem; }
+.steam-account-copy span { overflow-wrap: anywhere; }
+.steam-account-form { border-top: 1px solid var(--line); padding-top: 0.7rem; }
+.steam-account-form .field { margin: 0.65rem 0; }
+.link-button.danger { color: var(--danger); }
+.banner.error.compact-inline { margin-bottom: 0.2rem; padding: 0.5rem 0.65rem; font-size: 0.82rem; }
 .checkline { display: flex; gap: 0.55rem; align-items: flex-start; margin: 0.75rem 0; font-size: 0.82rem; color: #ffd6d9; }
 .checkline input { flex: 0 0 auto; width: 1rem; height: 1rem; margin-top: 0.18rem; accent-color: var(--accent); }
 .report { margin-top: 0.5rem; }
@@ -334,4 +367,5 @@ input:focus { outline: 2px solid rgba(103, 232, 165, 0.28); border-color: rgba(1
   .detail-grid { grid-template-columns: 1fr; }
   .detail-grid > div { padding-left: 0 !important; }
   .selected-item.large { flex-direction: column; align-items: flex-start; }
+  .steam-qr { width: 170px; height: 170px; }
 }

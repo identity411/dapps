@@ -19,7 +19,7 @@
     "deploy:local": "npm run deploy:local -w @skinpact/contracts",
     "relay": "npm run dev -w @skinpact/relay",
     "web": "npm run dev -w @skinpact/web",
-    "helper": "npm run start -w @skinpact/helper",
+    "helper": "npm run start -w @skinpact/helper --",
     "test": "npm run test -w @skinpact/shared && npm run test -w @skinpact/contracts && npm run test -w @skinpact/relay && npm run test -w @skinpact/helper",
     "build": "npm run build -w @skinpact/web",
     "e2e:local": "npm run compile && tsx scripts/e2e-local.ts",

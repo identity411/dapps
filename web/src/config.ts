@@ -10,3 +10,7 @@ export const RELAY_URL = (import.meta.env.VITE_RELAY_URL || "http://127.0.0.1:87
 export const CONTRACT_ADDRESS =
   import.meta.env.VITE_CONTRACT_ADDRESS || localDeploy?.address || "";
 export const CONTRACT_CONFIGURED = /^0x[0-9a-fA-F]{40}$/.test(CONTRACT_ADDRESS);
+export const HELPER_URL = (import.meta.env.VITE_HELPER_URL || "http://127.0.0.1:8788").replace(
+  /\/+$/,
+  "",
+);

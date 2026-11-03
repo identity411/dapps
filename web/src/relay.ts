@@ -50,10 +50,31 @@ export interface PairingCode {
   expiresAt: number;
 }
 
+export interface SavedSteamAccount {
+  id: string;
+  steamId64: string;
+  inventoryId: string;
+  nickname: string;
+  avatarUrl: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export type BuyerAccountLink =
+  | { linked: false }
+  | {
+      linked: true;
+      steamAccountId: string | null;
+      steamId64: string;
+      inventoryId: string | null;
+      nickname: string | null;
+      avatarUrl: string | null;
+    };
+
 async function relayFetch<T>(
   path: string,
   options: {
-    method?: "GET" | "POST" | "PUT";
+    method?: "GET" | "POST" | "PUT" | "DELETE";
     token?: string | null;
     body?: unknown;
     timeoutMs?: number;
@@ -159,6 +180,57 @@ export function submitBuyerTradeUrl(
     token,
     body: { tradeUrl },
   });
+}
+
+export function getBuyerAccountLink(token: string, listingId: string): Promise<BuyerAccountLink> {
+  return relayFetch<BuyerAccountLink>(`/listings/${listingId}/buyer-account`, {
+    method: "GET",
+    token,
+  });
+}
+
+export async function listSteamAccounts(token: string): Promise<SavedSteamAccount[]> {
+  const result = await relayFetch<{ accounts: SavedSteamAccount[] }>("/steam-accounts", {
+    method: "GET",
+    token,
+  });
+  return result.accounts || [];
+}
+
+export async function createSteamAccount(
+  token: string,
+  tradeUrl: string,
+  inventoryId: string,
+): Promise<SavedSteamAccount> {
+  const result = await relayFetch<{ account: SavedSteamAccount }>("/steam-accounts", {
+    method: "POST",
+    token,
+    timeoutMs: 25_000,
+    body: { tradeUrl, inventoryId },
+  });
+  return result.account;
+}
+
+export function deleteSteamAccount(token: string, accountId: string): Promise<{ ok: boolean }> {
+  return relayFetch<{ ok: boolean }>(`/steam-accounts/${encodeURIComponent(accountId)}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+export function linkSavedSteamAccount(
+  token: string,
+  listingId: string,
+  steamAccountId: string,
+): Promise<{ buyerSteamId: string; steamAccountId: string | null }> {
+  return relayFetch<{ buyerSteamId: string; steamAccountId: string | null }>(
+    `/listings/${listingId}/buyer-trade-url`,
+    {
+      method: "PUT",
+      token,
+      body: { steamAccountId },
+    },
+  );
 }
 
 export function getSellerReport(token: string, listingId: string): Promise<SellerReport> {
