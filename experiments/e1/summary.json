@@ -1,7 +1,8 @@
 {
   "experiment": "E1",
   "generatedAt": "2026-11-06T17:04:46.810Z",
-  "codeCommit": "d3a9a1a",
+  "codeCommit": "6d8ffa0",
+  "dataCommit": "febd12e",
   "environment": {
     "local": {
       "network": "hardhat (in-process)",
