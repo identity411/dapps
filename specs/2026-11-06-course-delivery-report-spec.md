@@ -1,7 +1,7 @@
 # Course Delivery & Report Spec · SkinPact 期末作业
 
 **状态**：执行中（E1/E2 已完成；E3 / 报告 / Slides / 视频 / QA 待做）
-**版本**：v0.2
+**版本**：v0.3
 **日期**：2026-11-07
 **课程截止**：2026-11-08 23:59
 **目标提交**：2026-11-07 21:00（留 11-08 作缓冲）
@@ -24,9 +24,9 @@
 | 报告 / Slides / 视频 | ❌ | 均未开始；E1/E2 数据已可直接引用 |
 | Demo | ⚠️ | 本地 E2E 通过，浏览器 Demo 未彩排 |
 | 贡献表 / 提交 QA | ❌ | 未整理 |
-| 公开仓库同步 | ⚠️ | 仓库为 public，但本地 `docs/skinpact-spec` 比 origin 领先 1 commit（`6d8ffa0`），且 E1/E2 新文件尚未提交/推送 |
+| 公开仓库同步 | ✅ | 仓库为 public；`docs/skinpact-spec` 已推送至 `febd12e`，`deployments/` 与 `experiments/` 在 GitHub 可见 |
 
-**结论**：Codebase 35% 与 Experiment 的 E1/E2 部分已保住；**剩余主体是 E3 + 报告 / Slides / 视频 / Demo 彩排 / QA**。两个卡点必须处理：① Sepolia smoke 运行时表现出 Amsterdam 时代 gas 规则，而本地 Hardhat 默认 Osaka，状态创建类操作 gas 相差 2.6–4 倍，报告必须并列呈现、不可混用；② 公开仓库尚未包含 stage2 与 E1/E2 产物，提交前需 commit + push。
+**结论**：Codebase 35% 与 Experiment 的 E1/E2 部分已保住；公开仓库已同步（`febd12e`）。**剩余主体是 E3 + 报告 / Slides / 视频 / Demo 彩排 / QA**。唯一的数据呈现卡点：Sepolia smoke 运行时表现出 Amsterdam 时代 gas 规则，而本地 Hardhat 默认 Osaka，状态创建类操作 gas 相差 2.6–4 倍，报告必须并列呈现、不可混用。
 
 ---
 
@@ -43,7 +43,7 @@
 | 英文报告 PDF | `{N}-SkinPact.pdf` | R1 | ❌ |
 | 英文 Slides | `{N}-SkinPact.pptx` | R5 | ❌ |
 | 英文视频 | `{N}-SkinPact-video.txt`（unlisted + 备份） | R5 | ❌ |
-| Public repo + README | GitHub 仓库、README | R1/R3 | ✅ public；⚠️ 本地领先 1 commit，需 push |
+| Public repo + README | GitHub 仓库、README | R1/R3 | ✅ public；已推送 `febd12e` |
 | 命名规范 | `{N}-SkinPact.pdf/.pptx/-video.txt` | R1 | ❌ |
 | testnet-only 声明 | 报告 / README / 视频口播 | R1/R5 | ❌ |
 | 截止时间 | 11-07 21:00 提交，11-08 23:59 截止 | 全队 | — |
@@ -162,7 +162,7 @@ experiments/
 - **E2 工具链**：Slither 需要 Hardhat 缓存 solc + 绝对 OpenZeppelin remap；命令已写入 `experiments/e2/findings.md` §10。Slither 不是审计/形式化验证。
 - **Steam 证据边界**：E2E 与 E2 的 Steam 传输为 mock；真实交付是手动 exit check，报告/视频必须一致标注。
 - **E3 未开始**：距离 21:00 目标提交时间有限，建议直接采用 2–3 人 Nielsen heuristic 降级方案并明确标注。
-- **公开仓库未同步**：本地领先 origin 1 个 commit（`6d8ffa0`），E1/E2 新文件尚未提交/推送；提交前必须 commit + push，否则公开仓库无法支撑报告引用。
+- **公开仓库已同步**：`febd12e` 已推送，GitHub 可见 `deployments/` 与 `experiments/`；后续报告/README 更新需继续 commit + push。
 
 ---
 
@@ -276,7 +276,7 @@ experiments/
 [ ] 视频链接：{N}-SkinPact-video.txt（unlisted + 备份）
 [ ] 贡献表（报告 + README）
 [ ] public repo + README（地址、运行、限制、mock 声明）
-[ ] **git push stage2 + E1/E2**；GitHub 页面确认 deployments/ 与 experiments/ 可见
+[x] **git push stage2 + E1/E2**（`febd12e`）；GitHub 页面确认 deployments/ 与 experiments/ 可见
 [ ] clean clone：npm install / npm test / npm run typecheck / npm run build 通过
 [ ] npm run e2e:local 通过
 [ ] 无 secrets：git grep 私钥/token；.env 未提交
@@ -373,5 +373,5 @@ npm run build
 - [ ] Demo 两次彩排 + backup
 - [ ] 贡献表、testnet-only 声明、mock 标注
 - [ ] clean clone + 无 secrets
-- [ ] **公开仓库包含 stage2 + E1/E2 产物**（当前本地领先 1 commit，需 push）
+- [x] **公开仓库包含 stage2 + E1/E2 产物**（已推送 `febd12e`）
 - [ ] 11-07 21:00 前提交，保存确认

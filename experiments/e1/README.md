@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Date | 2026-11-07 |
-| Code commit | `6d8ffa0` |
+| Code commit | `6d8ffa0` (contract); completion-smoke data commit `febd12e` |
 | Contract | `SkinPactMarket` (`contracts/contracts/SkinPactMarket.sol`) |
 | Local environment | Hardhat 2.29.1, default hardfork **Osaka**, chain 31337, in-process |
 | Sepolia environment | chain 11155111, contract `0x2Ffca05611801F532Afc6135b56baBEB0D7460eF`; gas from the 2026-11-06 smoke plus the 2026-11-07 E1 completion smoke |
