@@ -1,11 +1,52 @@
 # Course Delivery & Report Spec · SkinPact 期末作业
 
-**状态**：执行中（E1/E2 已完成；E3 / 报告 / Slides / 视频 / QA 待做）
+**状态**：执行中（E1/E2 已完成；报告 / Slides / 视频 / QA 待做；E3 可选）
 **版本**：v0.3
 **日期**：2026-11-07
 **课程截止**：2026-11-08 23:59
 **目标提交**：2026-11-07 21:00（留 11-08 作缓冲）
 **上游**：[MVP Spec §2 / §6 / §8](./2026-11-01-dapp-project-mvp-spec.md)、[S2-mini Spec](./2026-11-06-stage-2-minimal-refund-dispute-spec.md)、[Sepolia Spec](./2026-11-06-sepolia-deployment-spec.md)
+
+---
+
+## 0. 官方要求（原文照录）
+
+**来源**：LMS Completion requirements / Marking Scheme（用户提供，2026-11-07）；
+`~/Downloads/Project Tutorial (1).pdf`（13 页技术教程：DApp 架构、Solidity、ethers.js、MetaMask；**无实验评分细则**）；
+`~/Downloads/dapp (1).zip`（React + ethers NFT claim starter；**无 README/rubric**，`App.jsx` 仍是填空模板）。
+
+```text
+Completion requirements
+Opened: Friday, 18 September 2026, 12:00 AM
+Due: Sunday, 8 November 2026, 11:59 PM
+
+A representative from your group needs to submit:
+(i) the written report,
+(ii) the presentation slides,
+(iii) the link to your video (put it in a word/txt document),
+(iv) the code.
+
+· Name your file as: 'Number of team members-Project name'
+
+Late submission policy:
+• 10% deduction for late assignments submitted within 1 day late.
+• 20% deduction for late assignments submitted within 2 days late.
+• 50% deduction for late assignments submitted within 7 days late.
+• 100% deduction for late assignments submitted after 7 days late.
+
+Marking Scheme:
+Completed Codebase (35%)
+Experiment Analysis Report (35%)
+Demo and Video (15%)
+Logical, creative and coherent (15%)
+```
+
+**对本 spec 的直接影响**：
+
+- `{N}` 必须解释为**团队成员人数**（Number of team members），不是队伍编号。例如 5 人团队：`5-SkinPact.pdf`、`5-SkinPact.pptx`、`5-SkinPact-video.txt`。本 spec 其余地方的 `{N}-SkinPact.*` 均按此规则执行。
+- 硬性提交物只有四类：report、slides、video link（word/txt）、code；命名、链接可访问性与迟交规则按原文执行。
+- **官方材料没有点名 E3**，也没有规定实验数量；E1–E3 是本 spec 的规划，不是官方硬性条目。详见 §4.3 的核对说明。
+- 官方评分权重与本 spec 采用的一致：Codebase 35% / Experiment 35% / Demo & Video 15% / Coherence 15%。
 
 ---
 
@@ -20,13 +61,13 @@
 | Sepolia | ✅ | 合约 `0x2Ffca…460eF`，block 12077649；[Etherscan verified](https://sepolia.etherscan.io/address/0x2Ffca05611801F532Afc6135b56baBEB0D7460eF#code)；11 笔 smoke tx；Web/Relay 连 Sepolia 待走查 |
 | E1 Gas/费率 | ✅ 完成（11-07） | 本地 11 操作 + Sepolia 全部 11 操作（11-06 原始 smoke + 11-07 completion smoke）；`experiments/e1/` 有 CSV、JSON、费率表、gas 柱状图、break-even 图；补测的 4 个操作见 `sepolia-smoke-missing.json` |
 | E2 安全实验 | ✅ 完成（11-07） | `experiments/e2/`：threat-model、17 findings、trust-table、Slither（0 High/Medium）、coverage（100% stmts/funcs/lines，87.5% branch） |
-| E3 可用性 | ❌ | 未做；可降级 heuristic |
+| E3 可用性 | ⚠️ 非官方硬性项 | 本 spec 建议做；可降级 heuristic；官方材料未点名 E3（见 §0 / §4.3） |
 | 报告 / Slides / 视频 | ❌ | 均未开始；E1/E2 数据已可直接引用 |
 | Demo | ⚠️ | 本地 E2E 通过，浏览器 Demo 未彩排 |
 | 贡献表 / 提交 QA | ❌ | 未整理 |
 | 公开仓库同步 | ✅ | 仓库为 public；`docs/skinpact-spec` 已推送至 `febd12e`，`deployments/` 与 `experiments/` 在 GitHub 可见 |
 
-**结论**：Codebase 35% 与 Experiment 的 E1/E2 部分已保住；公开仓库已同步（`febd12e`）。**剩余主体是 E3 + 报告 / Slides / 视频 / Demo 彩排 / QA**。唯一的数据呈现卡点：Sepolia smoke 运行时表现出 Amsterdam 时代 gas 规则，而本地 Hardhat 默认 Osaka，状态创建类操作 gas 相差 2.6–4 倍，报告必须并列呈现、不可混用。
+**结论**：Codebase 35% 与 Experiment 的 E1/E2 部分已保住；公开仓库已同步（`febd12e`）。**剩余主体是报告 / Slides / 视频 / Demo 彩排 / QA；E3 为可选增强项**（官方材料未点名，见 §0 / §4.3）。唯一的数据呈现卡点：Sepolia smoke 运行时表现出 Amsterdam 时代 gas 规则，而本地 Hardhat 默认 Osaka，状态创建类操作 gas 相差 2.6–4 倍，报告必须并列呈现、不可混用。
 
 ---
 
@@ -50,6 +91,8 @@
 
 评分权重：**Codebase 35% / Experiment 35% / Demo 15% / Coherence 15%**；迟交 10/20/50/100%。
 
+> 官方只按 **Experiment Analysis Report (35%)** 计分，未规定实验数量或 E1–E3 名称（§0）。E1/E2 已构成两个完整实验；E3 是建议的第三项，不是硬性提交门槛。
+
 ---
 
 ## 3. 剩余工作包（Work Packages）
@@ -59,7 +102,7 @@
 | WP0 | Sepolia 部署 + verify + smoke ✅ | 地址 `0x2Ffca…460eF`、tx、verify URL、11 笔 smoke | R2/R3 | 11-06 完成 |
 | WP1 | E1 gas / 费率实验 ✅ | `experiments/e1/`：local-gas.csv/json、sepolia-gas.csv、fee-comparison.csv、summary.json、两张图（SVG+PNG）、README | R4/R2 | ✅ 11-07 |
 | WP2 | E2 安全实验 ✅ | `experiments/e2/`：threat-model.md、findings.md、trust-table.md、slither.txt、coverage.txt、README | R2 | ✅ 11-07 |
-| WP3 | E3 可用性实验（或 heuristic） | 漏斗图、表格、改进项 | R4/R1 | 11-07 |
+| WP3 | E3 可用性实验（可选；或 heuristic） | 漏斗图、表格、改进项 | R4/R1 | 11-07 |
 | WP4 | 报告 | `{N}-SkinPact.pdf` | R1 | 11-07 |
 | WP5 | Slides + 视频 | `.pptx` + `-video.txt` | R5 | 11-07 |
 | WP6 | Demo 彩排 + backup | 两次彩排、预录视频 | R5/全队 | 11-07 |
@@ -71,7 +114,7 @@
 
 ## 4. 实验计划（Experiment 35%）
 
-报告要求 E1–E3 约占 40–50% 篇幅。所有原始数据放仓库：
+本 spec 规划 E1–E3 约占 40–50% 篇幅；官方只规定 Experiment Analysis Report 35%，未规定实验数量（§0）。E3 为建议项，不做时需在 Limitations 说明。所有原始数据放仓库：
 
 ```text
 experiments/
@@ -140,7 +183,14 @@ experiments/
 - 结论：未发现可利用的越权、重入、双结算或 URL 访问控制漏洞。主要风险是信任边界而非代码漏洞：**F-01 Steam 交付不可链上验证**、**F-02 arbiter 单点且不可更换**、**F-03 Trade URL 是 bearer secret 且 Relay 可解密**。另有 F-04 buyer dispute 冻结、F-05 seller mark-without-offer、F-06 buyer-first Accept race 等残余风险，均已在报告中披露。
 - **卡点/限制**：Slither 需要 Hardhat 缓存 solc + 绝对 OpenZeppelin remap，命令已记录在 `findings.md` §10；Slither 是静态分析，不是 formal verification 或审计；E2E 的 Steam 传输是 mock，不能当作真实交付证据。
 
-### 4.3 E3 — 可用性（可降级）
+### 4.3 E3 — 可用性（可降级，非官方硬性项）
+
+> **官方核对（2026-11-07）**：LMS Completion requirements / Marking Scheme 只写
+> “Experiment Analysis Report (35%)”，没有点名 E3，也没有规定实验数量。
+> `Project Tutorial (1).pdf` 是技术教程，`dapp (1).zip` 是 starter，均无实验
+> rubric。E1–E3 是本 spec 的规划；E3 **不是硬性提交门槛**。建议仍做 2–3 人
+> heuristic 以增强 Experiment/Coherence；若不做，报告必须在 Limitations 明确写
+> “no formal usability study”。
 
 **首选**：5–8 名同学/玩家，mock Steam + 预充值钱包，完成：
 
@@ -161,7 +211,7 @@ experiments/
 - **E1 completion smoke 会真实发 tx 并等待窗口**：补测 4 个操作需约 10 分钟；数据已落盘到 `sepolia-smoke-missing.json`，复跑不是读报告的必要步骤。
 - **E2 工具链**：Slither 需要 Hardhat 缓存 solc + 绝对 OpenZeppelin remap；命令已写入 `experiments/e2/findings.md` §10。Slither 不是审计/形式化验证。
 - **Steam 证据边界**：E2E 与 E2 的 Steam 传输为 mock；真实交付是手动 exit check，报告/视频必须一致标注。
-- **E3 未开始**：距离 21:00 目标提交时间有限，建议直接采用 2–3 人 Nielsen heuristic 降级方案并明确标注。
+- **E3 未开始（可选）**：官方未点名；若做，建议直接采用 2–3 人 Nielsen heuristic 并明确标注；若不做，报告 Limitations 写明 no formal usability study。不要让它挤占 report/slides/video。
 - **公开仓库已同步**：`febd12e` 已推送，GitHub 可见 `deployments/` 与 `experiments/`；后续报告/README 更新需继续 commit + push。
 
 ---
@@ -175,7 +225,7 @@ experiments/
 3. **Background / Related Work**：Steam trade offer、BUFF/UU、托管与仲裁；引用来源/日期
 4. **Design**：角色、信任边界、S2-mini 状态机、escrow/bond/pull payment、dispute/arbiter
 5. **Implementation**：合约、Relay、helper、Web、Sepolia 部署；关键安全决策
-6. **Experiments E1–E3**（40–50%）：
+6. **Experiments E1–E3**（本 spec 规划 40–50%；官方未规定 E3）：
    - E1 方法与数据/图表/结论
    - E2 威胁模型/测试/findings/trust table
    - E3 协议/结果/改进
@@ -304,7 +354,7 @@ npm run build
 |---|---|---|
 | **11-06** | Sepolia 配置/部署/verify；Web/Relay/helper 切换；最小 smoke；手动 UI 走查；确认 repo public/贡献表 | ✅ Sepolia 部署+verify+11 tx；UI 走查未做 |
 | **11-07 凌晨（实际）** | E1 本地 11 操作 gas + Sepolia CSV + 费率/盈亏平衡/图；E2 threat model/findings/trust table/Slither/coverage；Sepolia completion smoke 补测 4 个操作 | ✅ 完成（E1/E2） |
-| **11-07 上午** | E3（建议直接 heuristic）；报告主体（design/experiments/limitations） | ⬜ |
+| **11-07 上午** | E3（可选；若做则 heuristic）；报告主体（design/experiments/limitations） | ⬜ |
 | **11-07 下午** | 完成报告 + Slides；贡献表；README 状态 | ⬜ |
 | **11-07 傍晚** | Demo 彩排 + 录视频；clean clone；QA；**21:00 提交** | ⬜ |
 | **11-08** | 只处理提交平台故障；不新增功能 | — |
@@ -367,8 +417,8 @@ npm run build
 - [ ] 所有课程硬性要求有证据（Sepolia、链上操作、public repo、英文交付物）
 - [x] E1 数据/图表/结论齐全：本地 11 操作 + Sepolia 全部 11 操作、CSV、两张图、费率来源、break-even（`experiments/e1/`）
 - [x] E2 数据/结论齐全：threat model、17 findings、trust table、Slither、coverage（`experiments/e2/`）
-- [ ] E3 数据/图表/结论齐全（或明确标注的 heuristic）
-- [ ] 报告实验占比达标（E1/E2 素材已就绪，E3 补齐后即可写）
+- [ ] E3 数据/图表/结论齐全，**或**明确标注未做 + limitation（官方未点名 E3）
+- [ ] 报告实验章节完整（E1/E2 已就绪；E3 若做 heuristic 则补入）
 - [ ] 报告/Slides/视频英文、命名正确、链接可访问
 - [ ] Demo 两次彩排 + backup
 - [ ] 贡献表、testnet-only 声明、mock 标注
