@@ -20,6 +20,7 @@
     "deploy:sepolia": "npm run deploy:sepolia -w @skinpact/contracts",
     "preflight:sepolia": "tsx scripts/sepolia-preflight.ts",
     "smoke:sepolia": "tsx scripts/sepolia-smoke.ts",
+    "smoke:sepolia:e1": "tsx scripts/sepolia-smoke-e1.ts",
     "relay": "npm run dev -w @skinpact/relay",
     "web": "npm run dev -w @skinpact/web",
     "web:sepolia": "npm run dev:sepolia -w @skinpact/web",

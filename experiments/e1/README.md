@@ -6,10 +6,10 @@
 | Code commit | `6d8ffa0` |
 | Contract | `SkinPactMarket` (`contracts/contracts/SkinPactMarket.sol`) |
 | Local environment | Hardhat 2.29.1, default hardfork **Osaka**, chain 31337, in-process |
-| Sepolia environment | chain 11155111, contract `0x2Ffca05611801F532Afc6135b56baBEB0D7460eF`; gas from the existing 2026-11-06 smoke run |
+| Sepolia environment | chain 11155111, contract `0x2Ffca05611801F532Afc6135b56baBEB0D7460eF`; gas from the 2026-11-06 smoke plus the 2026-11-07 E1 completion smoke |
 | Scenario | price `0.01` test ETH, bond `0.001` test ETH, offer window `600 s`, challenge window `300 s`, delivery window `3,600 s` |
 | ETH/USD assumption | **$3,000** (illustrative; test ETH has no real value) |
-| Gas-price scenarios | 1, 10, 50 gwei (observed Sepolia gas price was 18–19 **wei**, an idle-testnet artifact) |
+| Gas-price scenarios | 1, 10, 50 gwei (observed Sepolia gas price was 16–19 **wei**, an idle-testnet artifact) |
 
 This experiment answers two questions:
 
@@ -21,7 +21,8 @@ This experiment answers two questions:
 | File | Contents |
 |---|---|
 | [`local-gas.csv`](./local-gas.csv) / [`local-gas.json`](./local-gas.json) | 11 operations, local Hardhat, target-tx `gasUsed` only |
-| [`sepolia-gas.csv`](./sepolia-gas.csv) | 11 smoke transactions normalized from `sepolia-smoke.json` |
+| [`sepolia-gas.csv`](./sepolia-gas.csv) | Sepolia smoke transactions normalized from the original and completion runs |
+| [`sepolia-smoke-missing.json`](./sepolia-smoke-missing.json) | Raw E1 completion smoke: `claimAccepted`, `finalizeClaim`, `expireOrder`, `withdraw` |
 | [`fee-comparison.csv`](./fee-comparison.csv) | Platform fee vs gas at 10 gwei for competitor and hypothetical rates |
 | [`summary.json`](./summary.json) | Machine-readable assumptions, happy-path totals, break-even table, sources, caveats |
 | [`gas-by-operation.svg`](./gas-by-operation.svg) / [`.png`](./gas-by-operation.png) | Grouped bar chart: local vs Sepolia |
@@ -40,7 +41,7 @@ During this run, Sepolia executed with **Amsterdam-era gas rules**, while Hardha
   **EIP-7708** system address `0xffff…fffe`. This is a protocol-level ETH
   transfer log, **not** an ERC-20 token transfer, and it is why the Sepolia
   receipts show a `Transfer` event that the local receipts do not.
-- Sepolia's observed effective gas price was **18–19 wei**, which is typical of an
+- Sepolia's observed effective gas price was **16–19 wei**, which is typical of an
   idle testnet and not representative of market conditions.
 
 Gas-rule sources:
@@ -62,9 +63,10 @@ is deterministic; this is a reporting convention, not a market gas price.
 
 ## Gas by operation
 
-Local: 11 operations, in-process Hardhat, fresh contract. Sepolia: 7 unique
-operations from the smoke run; the other four were not measured on Sepolia
-because no new transactions were sent for E1.
+Local: 11 operations, in-process Hardhat, fresh contract. Sepolia: all 11
+operations, combining the original 2026-11-06 smoke with the 2026-11-07
+completion smoke for `claimAccepted`, `finalizeClaim`, `expireOrder`, and
+`withdraw`.
 
 | Operation | Local gas (Osaka) | Sepolia gas (Amsterdam) | Ratio |
 |---|---:|---:|---:|
@@ -72,13 +74,28 @@ because no new transactions were sent for E1.
 | `buy` | 57,394 | 152,614 | 2.66× |
 | `markOfferSent` | 77,952 | 255,092 | 3.27× |
 | `confirmReceipt` | 64,161 | 55,845 | 0.87× |
-| `claimAccepted` | 55,698 | not measured | — |
-| `finalizeClaim` | 44,549 | not measured | — |
-| `expireOrder` | 68,820 | not measured | — |
+| `claimAccepted` | 55,698 | 144,830 | 2.60× |
+| `finalizeClaim` | 44,549 | 151,253 | 3.40× |
+| `expireOrder` | 68,820 | 67,704 | 0.98× |
 | `cancelListing` | 42,645 | 51,429 | 1.21× |
 | `openDispute` | 79,966 | 257,106 | 3.22× |
 | `resolveDispute` | 45,958 | 152,662 | 3.32× |
-| `withdraw` | 32,399 | not measured | — |
+| `withdraw` | 32,399 | 43,004 | 1.33× |
+
+### Completion smoke (2026-11-07)
+
+The four operations that the original smoke did not cover were sent against the
+same verified contract on 2026-11-07. The script waited through the real 300 s
+challenge window and 600 s offer window.
+
+| Operation | tx hash | gasUsed |
+|---|---|---:|
+| `claimAccepted` | `0x9c460ea01743acebb4e966320965db0aa677d60dea7bfecdf564118ee7faab55` | 144,830 |
+| `finalizeClaim` | `0x23785c86b1effc6b2a43fa3363b75bf85d0694524acd71ac604acd0fa90b743b` | 151,253 |
+| `expireOrder` | `0xb1073786cadeb963116d32d2d5ba0afc1242dab090470a0ee0a2776b0db0db3e` | 67,704 |
+| `withdraw` | `0x5054aa174a1e705b0c10ce680cb029816c284fa82423a9684c4c057214cfee70` | 43,004 |
+
+Raw data, including setup transactions and listing IDs: [`sepolia-smoke-missing.json`](./sepolia-smoke-missing.json).
 
 **Happy path** = `createListing` + `buy` + `markOfferSent` + `confirmReceipt`:
 
@@ -87,9 +104,10 @@ because no new transactions were sent for E1.
 | Local Osaka | **374,508** |
 | Sepolia Amsterdam | **1,173,272** |
 
-`withdraw` is excluded from the happy-path comparison because the Sepolia smoke
-run did not include it. The local value is 32,399 gas; a Sepolia withdraw would
-likely be higher under the current state-access rules.
+`withdraw` is excluded from the happy-path comparison because it is a
+post-settlement payout, not part of the trade flow; it is measured separately on
+both environments. Including it would raise the happy-path gas and the break-even
+prices, so the fee table below is a lower bound on total cost.
 
 ## Fee comparison and break-even
 
@@ -117,10 +135,13 @@ because the local gas is lower: see `summary.json` for the full 18-row table.
 
 ### Observed Sepolia fees
 
-The smoke run's 11 transactions used an effective gas price of 18–19 wei and paid
-a total of `64,192,315 wei` = `0.000000000064192315` test ETH. At the illustrative
-$3,000/ETH price that is less than $0.000001. This is an **idle-testnet artifact**
-and should not be used for the economic conclusion.
+The original 11-transaction smoke plus the four completion target transactions
+used an effective gas price of 16–19 wei and paid a total of `70,700,971 wei` =
+`0.000000000070700971` test ETH. At the illustrative $3,000/ETH price that is less
+than $0.000001. This is an **idle-testnet artifact** and should not be used for
+the economic conclusion. The completion script also sent setup transactions
+(create/buy/mark/cancel); they are excluded from `sepolia-gas.csv` in the same
+way the local script excludes setup.
 
 ### Competitor fee sources
 
@@ -166,10 +187,16 @@ reduce the most expensive operation.
 ## Reproduce
 
 ```bash
-# from the repository root, code commit 6d8ffa0
-npm run e1:gas       # local Hardhat: writes local-gas.csv + local-gas.json
-npm run e1:report    # writes Sepolia CSV, fee CSV, summary, two SVGs
+# from the repository root; contract code commit 6d8ffa0
+npm run e1:gas               # local Hardhat: local-gas.csv + local-gas.json
+npm run smoke:sepolia:e1     # optional: 4 missing Sepolia ops, waits ~10 min
+npm run e1:report            # Sepolia CSV, fee CSV, summary, two SVGs
 ```
+
+`smoke:sepolia:e1` sends real testnet transactions against the verified contract
+and waits through the on-chain challenge/offer windows. The committed
+`sepolia-smoke-missing.json` is the result of the 2026-11-07 run; you do not need
+to re-send it to regenerate the report.
 
 The report script uses no chart dependency; it writes SVG directly. To produce
 PNG versions on macOS, headless Chrome is used (this preserves the chart aspect
@@ -202,16 +229,17 @@ E1_ETH_USD=6000 npm run e1:report
 - **ETH/USD is an assumption** ($3,000), not a price fetched for the run. The
   report can substitute a dated spot price without changing the gas data.
 - **Gas-price scenarios (1/10/50 gwei) are sensitivity inputs.** The observed
-  18–19 wei Sepolia price is an idle-chain artifact and is not used for the
+  16–19 wei Sepolia price is an idle-chain artifact and is not used for the
   economic conclusion.
 - **Local vs Sepolia gas rules differ** (Osaka vs Amsterdam; EIP-8037/8038 and
   EIP-7708). The numbers are shown side by side; do not mix them in one total.
-- **The Sepolia smoke run did not include** `claimAccepted`, `finalizeClaim`,
-  `expireOrder`, or `withdraw`; those are local-only measurements in E1.
-- **No new Sepolia transactions were sent for E1.** Re-running the smoke would
-  change the observed gas-price artifact and require faucet funds.
+- **The Sepolia completion smoke sends real transactions** and waits for the
+  300 s challenge window and 600 s offer window. It is optional for reading the
+  committed data; re-running it creates new listings and consumes faucet funds.
 - The local gas script excludes setup transactions and measures only the target
-  operation; this is stated per row in the CSV notes.
+  operation; this is stated per row in the CSV notes. The completion smoke
+  records the target operation and excludes its setup transactions from
+  `sepolia-gas.csv`.
 - `createListing` on Sepolia was a first-use state creation. A later listing in a
   warm contract would have different access costs; EIP-8037 state creation cost
   is paid once per slot, so the first listing is the worst case in a fresh
@@ -221,4 +249,5 @@ E1_ETH_USD=6000 npm run e1:report
 
 - E2 security findings and Slither/coverage: [`../e2/README.md`](../e2/README.md)
 - Sepolia deployment: [`../../deployments/sepolia.json`](../../deployments/sepolia.json)
-- Sepolia smoke script: [`../../scripts/sepolia-smoke.ts`](../../scripts/sepolia-smoke.ts)
+- Original smoke script: [`../../scripts/sepolia-smoke.ts`](../../scripts/sepolia-smoke.ts)
+- E1 completion smoke: [`../../scripts/sepolia-smoke-e1.ts`](../../scripts/sepolia-smoke-e1.ts)

@@ -17,17 +17,17 @@
 | React Web（Market / Orders / Accounts / Sell / Trade Room / withdraw / cancel / dispute / resolve） | ✅ 构建通过；手动 UI 走查待 review |
 | 本地链 P1–P8 E2E（合约 + Relay） | ✅ `npm run e2e:local` 通过；Steam 传输为明确标注的 mock |
 | Stage 0 真实 Steam offer | ✅ 已完成（见 Stage 0 spec）；helper 已用真实账号复测 |
-| E1 Gas / 费率实验 | ✅ 本地 11 操作 + Sepolia 7 操作；CSV、图表、盈亏平衡与竞品费率来源见 [`experiments/e1/`](experiments/e1/README.md) |
+| E1 Gas / 费率实验 | ✅ 本地 11 操作 + Sepolia 全部 11 操作（原始 smoke + completion smoke）；CSV、图表、盈亏平衡与竞品费率来源见 [`experiments/e1/`](experiments/e1/README.md) |
 | E2 安全 / 信任边界实验 | ✅ threat model、17 findings、trust table、Slither（0 High/Medium）、coverage（100% lines / 87.5% branch）见 [`experiments/e2/`](experiments/e2/README.md) |
 
 真实 Steam 交付需要卖家扫码登录自己的 Steam 账号并由买家在手机 Steam Guard 中接受，不能由自动化测试代替，也不应伪造。
 
 ## 实验数据（E1/E2）
 
-- **E1**：本地 Hardhat（Osaka）覆盖全部 11 个操作；Sepolia smoke 覆盖 7 个操作。Happy path（create + buy + mark + confirm）本地 374,508 gas、Sepolia 1,173,272 gas；在 10 gwei / $3,000 ETH 假设下，Sepolia gas ≈ $35.20，1%/2.5%/5% 费率的盈亏平衡价分别约为 $3,520 / $1,408 / $704。
-- **环境差异（必须注明）**：Sepolia 在本次 smoke 中表现出 Amsterdam 时代 gas 规则（EIP-8037/8038；EIP-7708 ETH 转账日志），本地 Hardhat 2.29.1 默认 Osaka；同一操作 gas 可相差 3–4 倍，实验报告并列呈现，不混用。
+- **E1**：本地 Hardhat（Osaka）覆盖全部 11 个操作；Sepolia 覆盖全部 11 个操作（11-06 原始 smoke + 11-07 completion smoke）。Happy path（create + buy + mark + confirm）本地 374,508 gas、Sepolia 1,173,272 gas；在 10 gwei / $3,000 ETH 假设下，Sepolia gas ≈ $35.20，1%/2.5%/5% 费率的盈亏平衡价分别约为 $3,520 / $1,408 / $704。
+- **环境差异（必须注明）**：Sepolia 在本次 smoke 中表现出 Amsterdam 时代 gas 规则（EIP-8037/8038；EIP-7708 ETH 转账日志），本地 Hardhat 2.29.1 默认 Osaka；状态创建类操作 gas 可相差 2.6–4 倍，实验报告并列呈现，不混用。
 - **E2**：36 合约测试 + 1 shared + 18 relay + 12 helper、99-check E2E 全部通过；Slither 0 High/Medium；主要残余风险是 Steam 交付不可链上验证、arbiter 单点、Relay 可解密 buyer Trade URL（均已在 E2 文档中披露）。
-- **限制**：E1 的 Sepolia 数据没有 `claimAccepted` / `finalizeClaim` / `expireOrder` / `withdraw`；E2E 的 Steam 传输是 mock；test ETH 无真实价值。
+- **限制**：E1 的 Sepolia completion smoke 为真实发交易并等待窗口（约 10 分钟），数据为单次运行；E2E 的 Steam 传输是 mock；test ETH 无真实价值。
 
 ## 架构
 

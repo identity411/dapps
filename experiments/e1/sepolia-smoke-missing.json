@@ -1,0 +1,112 @@
+{
+  "generatedAt": "2026-11-06T17:04:39.832Z",
+  "network": "sepolia",
+  "chainId": 11155111,
+  "contract": "0x2Ffca05611801F532Afc6135b56baBEB0D7460eF",
+  "deploymentBlock": 12077649,
+  "seller": "0x82525958048270C794040D502a4A177efB32475d",
+  "buyer": "0xa685086fCA2f6C57551D804E2Cee71a30B064379",
+  "priceWei": "10000000000000000",
+  "bondWei": "1000000000000000",
+  "windows": {
+    "offerWindow": 600,
+    "challengeWindow": 300,
+    "deliveryWindow": 3600
+  },
+  "transactions": [
+    {
+      "step": "createListing(expiry)",
+      "txHash": "0xc9d015415951474ae932284223aabf931416a5153e986254f344360e262c5cd1",
+      "blockNumber": 12077865,
+      "gasUsed": "709733",
+      "gasPrice": "16",
+      "feeWei": "11355728"
+    },
+    {
+      "step": "buy(expiry)",
+      "txHash": "0xb33b8225c3de69b808c0bf5ebbf97b0f3d071cc48805d6d96b47381115482375",
+      "blockNumber": 12077867,
+      "gasUsed": "152614",
+      "gasPrice": "16",
+      "feeWei": "2441824"
+    },
+    {
+      "step": "createListing(claim)",
+      "txHash": "0xa0c7072148375139a395eb38a3e9b2bb6f36c1459d3c993fad0e6f8e45be9b29",
+      "blockNumber": 12077869,
+      "gasUsed": "709733",
+      "gasPrice": "16",
+      "feeWei": "11355728"
+    },
+    {
+      "step": "buy(claim)",
+      "txHash": "0x9d1c372202d7e9baac65c08c9096cbfc2a8c77bbd62f1b806a6da21894dbebaa",
+      "blockNumber": 12077870,
+      "gasUsed": "152614",
+      "gasPrice": "16",
+      "feeWei": "2441824"
+    },
+    {
+      "step": "markOfferSent(claim)",
+      "txHash": "0xff35e17e1f0787e81cb1b5feaedb688c834daa2fd93d9e8574e4c1b5aee1ec67",
+      "blockNumber": 12077871,
+      "gasUsed": "255092",
+      "gasPrice": "16",
+      "feeWei": "4081472"
+    },
+    {
+      "step": "claimAccepted",
+      "txHash": "0x9c460ea01743acebb4e966320965db0aa677d60dea7bfecdf564118ee7faab55",
+      "blockNumber": 12077872,
+      "gasUsed": "144830",
+      "gasPrice": "16",
+      "feeWei": "2317280"
+    },
+    {
+      "step": "createListing(withdraw)",
+      "txHash": "0xee89829ec234ae897f190d0ed0ca7ff1c8df0bd3af337c5f68d0a67d05579279",
+      "blockNumber": 12077873,
+      "gasUsed": "709733",
+      "gasPrice": "16",
+      "feeWei": "11355728"
+    },
+    {
+      "step": "cancelListing(withdraw)",
+      "txHash": "0x0ee02848dd1128926d6ab8dfb48410ddd7ec1c80ccc1db4ffce24ac604ccce74",
+      "blockNumber": 12077874,
+      "gasUsed": "51429",
+      "gasPrice": "16",
+      "feeWei": "822864"
+    },
+    {
+      "step": "withdraw",
+      "txHash": "0x5054aa174a1e705b0c10ce680cb029816c284fa82423a9684c4c057214cfee70",
+      "blockNumber": 12077875,
+      "gasUsed": "43004",
+      "gasPrice": "16",
+      "feeWei": "688064"
+    },
+    {
+      "step": "finalizeClaim",
+      "txHash": "0x23785c86b1effc6b2a43fa3363b75bf85d0694524acd71ac604acd0fa90b743b",
+      "blockNumber": 12077899,
+      "gasUsed": "151253",
+      "gasPrice": "16",
+      "feeWei": "2420048"
+    },
+    {
+      "step": "expireOrder",
+      "txHash": "0xb1073786cadeb963116d32d2d5ba0afc1242dab090470a0ee0a2776b0db0db3e",
+      "blockNumber": 12077918,
+      "gasUsed": "67704",
+      "gasPrice": "16",
+      "feeWei": "1083264"
+    }
+  ],
+  "note": "E1 completion smoke: claimAccepted, finalizeClaim, expireOrder, withdraw. Steam/Relay/helper were not involved. Listing IDs are included for traceability; tx hashes are the settlement evidence.",
+  "listingIds": {
+    "claim": "8",
+    "expiry": "7",
+    "withdraw": "9"
+  }
+}

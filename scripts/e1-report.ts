@@ -87,6 +87,20 @@ interface SepJson {
   transactions: SepTx[];
 }
 
+interface SepCompletionJson {
+  generatedAt: string;
+  network: string;
+  chainId: number;
+  contract: string;
+  deploymentBlock: number | null;
+  priceWei: string;
+  bondWei: string;
+  windows: { offerWindow: number; challengeWindow: number; deliveryWindow: number };
+  transactions: SepTx[];
+  listingIds?: Record<string, string>;
+  note?: string;
+}
+
 interface GasPoint {
   operation: string;
   gasUsed: number;
@@ -117,6 +131,19 @@ const local = JSON.parse(
 const sepolia = JSON.parse(
   fs.readFileSync(path.join(OUT, "sepolia-smoke.json"), "utf8"),
 ) as SepJson;
+const completionPath = path.join(OUT, "sepolia-smoke-missing.json");
+const completion = fs.existsSync(completionPath)
+  ? (JSON.parse(fs.readFileSync(completionPath, "utf8")) as SepCompletionJson)
+  : null;
+const COMPLETION_OPS = new Set([
+  "claimAccepted",
+  "finalizeClaim",
+  "expireOrder",
+  "withdraw",
+]);
+const completionTxs = (completion?.transactions ?? []).filter((tx) =>
+  COMPLETION_OPS.has(tx.step),
+);
 
 function normalizeOperation(step: string): string {
   return step.replace(/\(.*\)$/, "");
@@ -127,11 +154,15 @@ function stepNote(step: string): string {
   if (step.endsWith("(dispute)")) return "setup for the dispute path";
   if (step === "openDispute") return "stores only a dispute hash; funds stay in escrow";
   if (step.startsWith("resolveDispute")) return "arbiter: buyer wins, bond slashed to buyer";
-  if (step === "confirmReceipt") return "buyer confirms; no withdraw in this smoke run";
+  if (step === "confirmReceipt") return "buyer confirms; withdrawal measured separately";
+  if (step === "claimAccepted") return "starts the challenge window; no payout yet";
+  if (step === "finalizeClaim") return "permissionless after the challenge window; credits price + bond";
+  if (step === "expireOrder") return "permissionless refund; buyer price + seller bond as pull payments";
+  if (step === "withdraw") return "pull payment; ReentrancyGuard + zeroed credit before the call";
   return "";
 }
 
-const sepRows: SepRow[] = sepolia.transactions.map((tx) => ({
+const sepRows: SepRow[] = [...sepolia.transactions, ...completionTxs].map((tx) => ({
   step: tx.step,
   operation: normalizeOperation(tx.step),
   gasUsed: Number(tx.gasUsed),
@@ -424,8 +455,10 @@ function renderGasChart(): string {
     }
   });
   parts.push(
-    `<text x="${M.left}" y="${H - 62}" ${FONT} font-size="11" fill="#6b7280">Sepolia did not measure claimAccepted, finalizeClaim, expireOrder or withdraw.</text>`,
-    `<text x="${M.left}" y="${H - 46}" ${FONT} font-size="11" fill="#6b7280">No new Sepolia transactions were sent for E1; local values cover all 11 operations.</text>`,
+    completion
+      ? `<text x="${M.left}" y="${H - 62}" ${FONT} font-size="11" fill="#6b7280">Sepolia: 2026-11-06 smoke + E1 completion smoke (claim, finalize, expire, withdraw).</text>`
+      : `<text x="${M.left}" y="${H - 62}" ${FONT} font-size="11" fill="#6b7280">Sepolia did not measure claimAccepted, finalizeClaim, expireOrder or withdraw.</text>`,
+    `<text x="${M.left}" y="${H - 46}" ${FONT} font-size="11" fill="#6b7280">Local and Sepolia cover all 11 operations, but use different gas schedules.</text>`,
   );
   parts.push("</svg>");
   return parts.join("\n");
@@ -574,10 +607,19 @@ fs.writeFileSync(path.join(OUT, "fee-breakeven.svg"), `${renderBreakEvenChart()}
 // ---------------------------------------------------------------------------
 // Summary JSON
 // ---------------------------------------------------------------------------
-const totalSepoliaFeeWei = sepolia.transactions.reduce(
+const allSepoliaTxs = [...sepolia.transactions, ...completionTxs];
+const originalSepoliaFeeWei = sepolia.transactions.reduce(
   (sum, tx) => sum + BigInt(tx.feeWei),
   0n,
 );
+const completionSepoliaFeeWei = completionTxs.reduce(
+  (sum, tx) => sum + BigInt(tx.feeWei),
+  0n,
+);
+const totalSepoliaFeeWei = originalSepoliaFeeWei + completionSepoliaFeeWei;
+const gasPricesWei = allSepoliaTxs.map((tx) => Number(tx.gasPrice));
+const minGasPriceWei = Math.min(...gasPricesWei);
+const maxGasPriceWei = Math.max(...gasPricesWei);
 const codeCommit = execSync("git rev-parse --short HEAD", { cwd: ROOT })
   .toString()
   .trim();
@@ -600,14 +642,18 @@ const summary = {
       contract: sepolia.contract,
       deploymentBlock: sepolia.deploymentBlock,
       smokeGeneratedAt: sepolia.generatedAt,
-      note: "Receipt gasUsed from the existing smoke run; no new Sepolia transactions were sent for E1. Sepolia exhibited Amsterdam-era gas rules and EIP-7708 ETH-transfer logs during this run.",
+      completionSmokeGeneratedAt: completion?.generatedAt ?? null,
+      completionListingIds: completion?.listingIds ?? null,
+      note: completion
+        ? "Receipt gasUsed from the 2026-11-06 smoke plus the E1 completion smoke (claimAccepted, finalizeClaim, expireOrder, withdraw). Sepolia exhibited Amsterdam-era gas rules and EIP-7708 ETH-transfer logs during these runs."
+        : "Receipt gasUsed from the existing smoke run. Sepolia exhibited Amsterdam-era gas rules and EIP-7708 ETH-transfer logs during this run.",
     },
   },
   happyPath: {
     operations: HAPPY_PATH,
     localGas: localHappyGas,
     sepoliaGas: sepoliaHappyGas,
-    note: "withdraw is excluded because the Sepolia smoke run did not include it.",
+    note: "withdraw is excluded from the happy-path sum because it is a post-settlement payout; it is measured separately on both environments.",
   },
   assumptions: {
     ethUsd: ETH_USD,
@@ -616,10 +662,12 @@ const summary = {
     note: "ETH/USD and fee tiers are illustrative; test ETH has no real value.",
   },
   observedSepolia: {
-    gasPriceWeiPerGas: "18-19",
+    gasPriceWeiPerGas: `${minGasPriceWei}-${maxGasPriceWei}`,
+    originalSmokeFeeWei: originalSepoliaFeeWei.toString(),
+    completionSmokeFeeWei: completionSepoliaFeeWei.toString(),
     totalSmokeFeeWei: totalSepoliaFeeWei.toString(),
     totalSmokeFeeEth: (Number(totalSepoliaFeeWei) / 1e18).toFixed(18),
-    note: "Observed during an idle Sepolia period; not representative of market gas prices.",
+    note: "Observed during idle Sepolia periods; not representative of market gas prices.",
   },
   breakEven: breakEvenRows,
   feeSources,
@@ -642,9 +690,10 @@ const summary = {
   ],
   caveats: [
     "Local Hardhat defaults to Osaka; Sepolia exhibited Amsterdam-era gas rules (EIP-8037 state creation repricing, EIP-7708 ETH transfer logs). Values are reported separately and must not be mixed.",
-    "Sepolia gas used in this experiment comes from the 2026-11-06 smoke run; no new transactions were sent.",
-    "The Sepolia smoke run did not include claimAccepted, finalizeClaim, expireOrder or withdraw.",
-    "The observed Sepolia gas price (18-19 wei) is an idle-testnet artifact; break-even uses 1, 10 and 50 gwei scenarios.",
+    completion
+      ? "Sepolia gas combines the 2026-11-06 smoke with the E1 completion smoke (claimAccepted, finalizeClaim, expireOrder, withdraw)."
+      : "The Sepolia smoke run did not include claimAccepted, finalizeClaim, expireOrder or withdraw.",
+    `The observed Sepolia gas price (${minGasPriceWei}-${maxGasPriceWei} wei) is an idle-testnet artifact; break-even uses 1, 10 and 50 gwei scenarios.`,
     "Platform fee tiers 1% / 2.5% / 5% are hypothetical sensitivity inputs; competitor rates are sourced separately.",
     "Test ETH has no real value; USD figures are for economic illustration only.",
   ],
@@ -664,4 +713,6 @@ for (const fee of FEE_TIERS) {
     `  ${fee}% fee @ 10 gwei: local break-even ${fmtUsd(localBe)}, Sepolia ${fmtUsd(sepBe)}`,
   );
 }
-console.log(`Sepolia observed gas price: 18-19 wei; total smoke fee ${totalSepoliaFeeWei.toString()} wei`);
+console.log(
+  `Sepolia observed gas price: ${minGasPriceWei}-${maxGasPriceWei} wei; total smoke fee ${totalSepoliaFeeWei.toString()} wei`,
+);

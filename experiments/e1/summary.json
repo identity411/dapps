@@ -1,7 +1,7 @@
 {
   "experiment": "E1",
-  "generatedAt": "2026-11-06T16:50:03.381Z",
-  "codeCommit": "6d8ffa0",
+  "generatedAt": "2026-11-06T17:04:46.810Z",
+  "codeCommit": "d3a9a1a",
   "environment": {
     "local": {
       "network": "hardhat (in-process)",
@@ -17,7 +17,13 @@
       "contract": "0x2Ffca05611801F532Afc6135b56baBEB0D7460eF",
       "deploymentBlock": 12077649,
       "smokeGeneratedAt": "2026-11-06T16:17:17.478Z",
-      "note": "Receipt gasUsed from the existing smoke run; no new Sepolia transactions were sent for E1. Sepolia exhibited Amsterdam-era gas rules and EIP-7708 ETH-transfer logs during this run."
+      "completionSmokeGeneratedAt": "2026-11-06T17:04:39.832Z",
+      "completionListingIds": {
+        "claim": "8",
+        "expiry": "7",
+        "withdraw": "9"
+      },
+      "note": "Receipt gasUsed from the 2026-11-06 smoke plus the E1 completion smoke (claimAccepted, finalizeClaim, expireOrder, withdraw). Sepolia exhibited Amsterdam-era gas rules and EIP-7708 ETH-transfer logs during these runs."
     }
   },
   "happyPath": {
@@ -29,7 +35,7 @@
     ],
     "localGas": 374508,
     "sepoliaGas": 1173272,
-    "note": "withdraw is excluded because the Sepolia smoke run did not include it."
+    "note": "withdraw is excluded from the happy-path sum because it is a post-settlement payout; it is measured separately on both environments."
   },
   "assumptions": {
     "ethUsd": 3000,
@@ -46,10 +52,12 @@
     "note": "ETH/USD and fee tiers are illustrative; test ETH has no real value."
   },
   "observedSepolia": {
-    "gasPriceWeiPerGas": "18-19",
-    "totalSmokeFeeWei": "64192315",
-    "totalSmokeFeeEth": "0.000000000064192315",
-    "note": "Observed during an idle Sepolia period; not representative of market gas prices."
+    "gasPriceWeiPerGas": "16-19",
+    "originalSmokeFeeWei": "64192315",
+    "completionSmokeFeeWei": "6508656",
+    "totalSmokeFeeWei": "70700971",
+    "totalSmokeFeeEth": "0.000000000070700971",
+    "note": "Observed during idle Sepolia periods; not representative of market gas prices."
   },
   "breakEven": [
     {
@@ -290,9 +298,8 @@
   ],
   "caveats": [
     "Local Hardhat defaults to Osaka; Sepolia exhibited Amsterdam-era gas rules (EIP-8037 state creation repricing, EIP-7708 ETH transfer logs). Values are reported separately and must not be mixed.",
-    "Sepolia gas used in this experiment comes from the 2026-11-06 smoke run; no new transactions were sent.",
-    "The Sepolia smoke run did not include claimAccepted, finalizeClaim, expireOrder or withdraw.",
-    "The observed Sepolia gas price (18-19 wei) is an idle-testnet artifact; break-even uses 1, 10 and 50 gwei scenarios.",
+    "Sepolia gas combines the 2026-11-06 smoke with the E1 completion smoke (claimAccepted, finalizeClaim, expireOrder, withdraw).",
+    "The observed Sepolia gas price (16-19 wei) is an idle-testnet artifact; break-even uses 1, 10 and 50 gwei scenarios.",
     "Platform fee tiers 1% / 2.5% / 5% are hypothetical sensitivity inputs; competitor rates are sourced separately.",
     "Test ETH has no real value; USD figures are for economic illustration only."
   ]
