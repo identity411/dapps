@@ -404,7 +404,7 @@ export function Sell() {
       return;
     }
     if (maxPrice !== null && priceWei > maxPrice) {
-      setError(`价格超过本地合约上限 ${formatEth(maxPrice)} ETH。`);
+      setError(`价格超过合约上限 ${formatEth(maxPrice)} ETH。`);
       return;
     }
 
@@ -446,7 +446,7 @@ export function Sell() {
       <section className="page narrow">
         <div className="empty-state">
           <h1>卖家挂牌</h1>
-          <p>先连接 MetaMask；本地链无需真实资金。</p>
+          <p>先连接 MetaMask；测试 ETH，无需真实资金。</p>
           <button className="button primary" disabled={connecting} onClick={() => void connect()}>
             连接 MetaMask
           </button>
@@ -459,7 +459,7 @@ export function Sell() {
     <section className="page">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">SELL · LOCAL SELLER</p>
+          <p className="eyebrow">SELL · SELLER</p>
           <h1>挂牌 CS2 物品</h1>
           <p className="muted">
             扫码登录 Steam → 选择库存物品 → 定价并锁定保证金。物品不会转给平台；成交后由你的本地

@@ -9,6 +9,8 @@ export const STATUS_NAMES: Record<number, string> = {
   [ListingStatus.ClaimPending]: "ClaimPending",
   [ListingStatus.Completed]: "Completed",
   [ListingStatus.Refunded]: "Refunded",
+  [ListingStatus.Disputed]: "Disputed",
+  [ListingStatus.Cancelled]: "Cancelled",
 };
 
 export function statusName(status: number): string {

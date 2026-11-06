@@ -363,7 +363,28 @@ export function createApp(deps: AppDeps): express.Express {
         | ProfileRow
         | undefined;
       if (!row) throw new HttpError(404, "profile_not_found");
-      res.json({ address: row.address, steamId64: row.steam_id });
+
+      const base = { address: row.address, steamId64: row.steam_id };
+      if (req.query.include !== "steam") {
+        res.json(base);
+        return;
+      }
+
+      let profile: SteamProfile;
+      try {
+        profile = await withTimeout(steamProfiles.getProfile(row.steam_id), 4_000);
+      } catch {
+        // Steam's public profile page can be unreachable from the Relay host.
+        // The wallet/SteamID64 binding remains usable; only the display metadata
+        // falls back to the SteamID64 suffix.
+        profile = profileFallback(row.steam_id);
+      }
+      noStore(res);
+      res.json({
+        ...base,
+        nickname: profile.nickname,
+        avatarUrl: profile.avatarUrl,
+      });
     }),
   );
 
@@ -1018,7 +1039,8 @@ export async function cleanupTerminalBuyerUrls(db: DB, chain: ChainReader): Prom
       terminal =
         listing.status === ListingStatus.None ||
         listing.status === ListingStatus.Completed ||
-        listing.status === ListingStatus.Refunded;
+        listing.status === ListingStatus.Refunded ||
+        listing.status === ListingStatus.Cancelled;
     } catch {
       // Do not delete on transient RPC failure; retry on the next pass.
       terminal = false;

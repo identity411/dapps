@@ -36,6 +36,9 @@ export class FakeChain implements ChainReader {
       offerDeadline: BigInt(Math.floor(Date.now() / 1000) + 600),
       challengeDeadline: 0n,
       status: ListingStatus.Active,
+      deliveryDeadline: 0n,
+      disputeHash: "0x" + "00".repeat(32),
+      disputer: "0x0000000000000000000000000000000000000000",
       ...overrides,
     };
     this.listings.set(listingId, listing);
@@ -57,6 +60,9 @@ export class FakeChain implements ChainReader {
         offerDeadline: 0n,
         challengeDeadline: 0n,
         status: ListingStatus.None,
+        deliveryDeadline: 0n,
+        disputeHash: "0x" + "00".repeat(32),
+        disputer: "0x0000000000000000000000000000000000000000",
       };
     }
     return { ...listing };

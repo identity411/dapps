@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!web/.env.sepolia.example
 
 # dependencies / build artifacts
 node_modules/

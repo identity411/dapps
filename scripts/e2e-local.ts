@@ -1,5 +1,5 @@
 /**
- * SkinPact S1 local E2E (P1–P4).
+ * SkinPact S2-mini local E2E (P1–P8).
  *
  * Spawns a throwaway Hardhat node, deploys SkinPactMarket, runs the real Relay
  * app in-process with an in-memory SQLite DB, and exercises the contract + Relay
@@ -16,7 +16,15 @@ import path from "node:path";
 import { randomBytes } from "node:crypto";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
-import { Contract, ContractFactory, JsonRpcProvider, parseEther, type JsonRpcSigner } from "ethers";
+import {
+  Contract,
+  ContractFactory,
+  JsonRpcProvider,
+  keccak256,
+  parseEther,
+  toUtf8Bytes,
+  type JsonRpcSigner,
+} from "ethers";
 import { ListingStatus, STEAMID64_BASE, type ItemMetadata } from "@skinpact/shared";
 import { createApp, cleanupTerminalBuyerUrls } from "../relay/src/app.js";
 import { createDb } from "../relay/src/db.js";
@@ -39,6 +47,7 @@ const FAKE_ITEMS = [
 ];
 const OFFER_WINDOW = 600;
 const CHALLENGE_WINDOW = 300;
+const DELIVERY_WINDOW = 3_600;
 
 let checks = 0;
 function ok(condition: unknown, message: string): void {
@@ -117,15 +126,18 @@ async function main(): Promise<void> {
     const seller = await provider.getSigner(0);
     const buyer = await provider.getSigner(1);
     const outsider = await provider.getSigner(2);
+    const arbiter = await provider.getSigner(3);
     const signers = new Map<string, JsonRpcSigner>([
       ["seller", seller],
       ["buyer", buyer],
       ["outsider", outsider],
+      ["arbiter", arbiter],
     ]);
     const addresses = new Map<string, string>([
       ["seller", await seller.getAddress()],
       ["buyer", await buyer.getAddress()],
       ["outsider", await outsider.getAddress()],
+      ["arbiter", await arbiter.getAddress()],
     ]);
 
     const factory = new ContractFactory(artifact.abi, artifact.bytecode, seller);
@@ -135,6 +147,8 @@ async function main(): Promise<void> {
       parseEther("0.001"),
       OFFER_WINDOW,
       CHALLENGE_WINDOW,
+      DELIVERY_WINDOW,
+      await arbiter.getAddress(),
     );
     await market.waitForDeployment();
     const marketAddress = await market.getAddress();
@@ -479,19 +493,170 @@ async function main(): Promise<void> {
       "P3 all terminal buyer URLs cleaned",
     );
 
+    // ---------------------------------------------------------------------
+    // P5: seller cancels an unsold Active listing and recovers the bond.
+    // ---------------------------------------------------------------------
+    const item5 = await prepare(FAKE_ITEMS[0]!.assetId);
+    const sellerBefore5 = await withdrawableOf(addresses.get("seller")!);
+    const p5 = await createListing(item5.itemHash, PRICE.p1, seller);
+    await (await market.connect(seller).cancelListing(p5.id)).wait();
+    equal(await statusOf(p5.id), ListingStatus.Cancelled, "P5 active listing cancelled");
+    equal(
+      await withdrawableOf(addresses.get("seller")!),
+      sellerBefore5 + p5.bond,
+      "P5 seller bond refunded",
+    );
+    await expectRevert(
+      () => market.connect(seller).cancelListing.staticCall(p5.id),
+      "P5 cannot cancel twice",
+    );
+
+    // ---------------------------------------------------------------------
+    // P6: buyer disputes from OfferSent; arbiter refunds price, bond stays seller.
+    // ---------------------------------------------------------------------
+    const item6 = await prepare(FAKE_ITEMS[1]!.assetId);
+    const p6 = await createListing(item6.itemHash, PRICE.p2, seller);
+    await api("PUT", `/listings/${p6.id}/buyer-trade-url`, {
+      token: buyerToken,
+      body: { tradeUrl: buyerUrlFor("p6") },
+    });
+    await (await market.connect(buyer).buy(p6.id, { value: PRICE.p2 })).wait();
+    const offer6 = await api("POST", `/helper/listings/${p6.id}/offer`, {
+      token: helperToken,
+      body: { tradeOfferId: "950000000000000006" },
+    });
+    equal(offer6.status, 200, "P6 mock offer reported");
+    await (
+      await market.connect(seller).markOfferSent(p6.id, String(offer6.body.offerIdHash))
+    ).wait();
+    const buyerBefore6 = await withdrawableOf(addresses.get("buyer")!);
+    const sellerBefore6 = await withdrawableOf(addresses.get("seller")!);
+    await (
+      await market
+        .connect(buyer)
+        .openDispute(p6.id, keccak256(toUtf8Bytes("P6 buyer dispute: no delivery")))
+    ).wait();
+    equal(await statusOf(p6.id), ListingStatus.Disputed, "P6 buyer dispute opened");
+    equal(
+      await withdrawableOf(addresses.get("buyer")!),
+      buyerBefore6,
+      "P6 no payout while disputed",
+    );
+    await (await market.connect(arbiter).resolveDispute(p6.id, false, false)).wait();
+    equal(await statusOf(p6.id), ListingStatus.Refunded, "P6 arbiter refunded");
+    equal(
+      await withdrawableOf(addresses.get("buyer")!),
+      buyerBefore6 + PRICE.p2,
+      "P6 buyer price refunded",
+    );
+    equal(
+      await withdrawableOf(addresses.get("seller")!),
+      sellerBefore6 + p6.bond,
+      "P6 seller bond returned",
+    );
+
+    // ---------------------------------------------------------------------
+    // P7: buyer disputes a ClaimPending claim; arbiter rules for the seller.
+    // ---------------------------------------------------------------------
+    const item7 = await prepare(FAKE_ITEMS[2]!.assetId);
+    const p7 = await createListing(item7.itemHash, PRICE.p3, seller);
+    await api("PUT", `/listings/${p7.id}/buyer-trade-url`, {
+      token: buyerToken,
+      body: { tradeUrl: buyerUrlFor("p7") },
+    });
+    await (await market.connect(buyer).buy(p7.id, { value: PRICE.p3 })).wait();
+    const offer7 = await api("POST", `/helper/listings/${p7.id}/offer`, {
+      token: helperToken,
+      body: { tradeOfferId: "950000000000000007" },
+    });
+    equal(offer7.status, 200, "P7 mock offer reported");
+    await (
+      await market.connect(seller).markOfferSent(p7.id, String(offer7.body.offerIdHash))
+    ).wait();
+    const accepted7 = await api("POST", `/helper/listings/${p7.id}/accepted`, {
+      token: helperToken,
+      body: {
+        tradeOfferId: "950000000000000007",
+        observedAt: new Date().toISOString(),
+      },
+    });
+    equal(accepted7.status, 200, "P7 Accepted(3) evidence stored");
+    await (
+      await market.connect(seller).claimAccepted(p7.id, String(accepted7.body.evidenceHash))
+    ).wait();
+    equal(await statusOf(p7.id), ListingStatus.ClaimPending, "P7 claim pending");
+    const sellerBefore7 = await withdrawableOf(addresses.get("seller")!);
+    await (
+      await market
+        .connect(buyer)
+        .openDispute(p7.id, keccak256(toUtf8Bytes("P7 buyer disputes seller claim")))
+    ).wait();
+    equal(await statusOf(p7.id), ListingStatus.Disputed, "P7 claim dispute opened");
+    await (await market.connect(arbiter).resolveDispute(p7.id, true, false)).wait();
+    equal(await statusOf(p7.id), ListingStatus.Completed, "P7 arbiter paid seller");
+    equal(
+      await withdrawableOf(addresses.get("seller")!),
+      sellerBefore7 + PRICE.p3 + p7.bond,
+      "P7 seller paid price + bond",
+    );
+
+    // ---------------------------------------------------------------------
+    // P8: seller disputes from OfferSent; arbiter refunds buyer and slashes bond.
+    // ---------------------------------------------------------------------
+    const item8 = await prepare(FAKE_ITEMS[0]!.assetId);
+    const p8 = await createListing(item8.itemHash, PRICE.p1, seller);
+    await api("PUT", `/listings/${p8.id}/buyer-trade-url`, {
+      token: buyerToken,
+      body: { tradeUrl: buyerUrlFor("p8") },
+    });
+    await (await market.connect(buyer).buy(p8.id, { value: PRICE.p1 })).wait();
+    const offer8 = await api("POST", `/helper/listings/${p8.id}/offer`, {
+      token: helperToken,
+      body: { tradeOfferId: "950000000000000008" },
+    });
+    equal(offer8.status, 200, "P8 mock offer reported");
+    await (
+      await market.connect(seller).markOfferSent(p8.id, String(offer8.body.offerIdHash))
+    ).wait();
+    const buyerBefore8 = await withdrawableOf(addresses.get("buyer")!);
+    await (
+      await market
+        .connect(seller)
+        .openDispute(p8.id, keccak256(toUtf8Bytes("P8 seller cannot deliver")))
+    ).wait();
+    equal(await statusOf(p8.id), ListingStatus.Disputed, "P8 seller dispute opened");
+    await (await market.connect(arbiter).resolveDispute(p8.id, false, true)).wait();
+    equal(await statusOf(p8.id), ListingStatus.Refunded, "P8 arbiter refunded buyer");
+    equal(
+      await withdrawableOf(addresses.get("buyer")!),
+      buyerBefore8 + PRICE.p1 + p8.bond,
+      "P8 buyer receives price + slashed bond",
+    );
+
+    await cleanupTerminalBuyerUrls(db!, chain);
+    equal(
+      (db!.prepare("SELECT COUNT(*) AS n FROM buyer_urls").get() as { n: number }).n,
+      0,
+      "P5–P8 all terminal buyer URLs cleaned",
+    );
+
     // The synthetic URL never appears in the stored identity columns either.
     const allRows = JSON.stringify(
       db!.prepare("SELECT * FROM buyer_urls").all(),
     ) + JSON.stringify(db!.prepare("SELECT * FROM evidence").all());
     ok(!allRows.includes("e2e_secret_"), "P4 no buyer URL token in stored DB rows");
 
-    console.log("\nSkinPact S1 local E2E (P1–P4): PASS");
+    console.log("\nSkinPact S2-mini local E2E (P1–P8): PASS");
     console.log(`  checks: ${checks}`);
     console.log("  Steam transport: MOCKED in E2E (helper offer/accepted reports), not a real delivery");
     console.log("  P1 buyer confirm → Completed + withdrawable price+bond");
     console.log("  P2 seller claim → ClaimPending → challenge → permissionless finalize");
     console.log("  P3 no-offer expire after deadline → Refunded + both pull payments");
     console.log("  P4 Buyer URL: encrypted, seller-only after Funded, scoped helper, no token in API/DB, deleted on terminal");
+    console.log("  P5 seller cancel Active → Cancelled + bond refund");
+    console.log("  P6 OfferSent buyer dispute → arbiter buyer wins → Refunded (bond returns to seller)");
+    console.log("  P7 ClaimPending buyer dispute → arbiter seller wins → Completed");
+    console.log("  P8 OfferSent seller dispute → arbiter buyer wins + bond slashed → Refunded");
   } finally {
     if (server) {
       await new Promise<void>((resolve) => server!.close(() => resolve()));
@@ -514,7 +679,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error("\nSkinPact S1 local E2E: FAIL");
+  console.error("\nSkinPact S2-mini local E2E: FAIL");
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;
 });

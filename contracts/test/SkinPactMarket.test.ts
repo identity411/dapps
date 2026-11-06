@@ -11,26 +11,30 @@ const MAX_PRICE = parseEther("0.1");
 const MIN_BOND = parseEther("0.001");
 const OFFER_WINDOW = 600;
 const CHALLENGE_WINDOW = 300;
+const DELIVERY_WINDOW = 3_600;
 const ITEM_HASH = keccak256(toUtf8Bytes("item-1"));
 const ITEM_HASH_2 = keccak256(toUtf8Bytes("item-2"));
 const OFFER_HASH = keccak256(toUtf8Bytes("offer-1"));
 const OFFER_HASH_2 = keccak256(toUtf8Bytes("offer-2"));
 const EVIDENCE_HASH = keccak256(toUtf8Bytes("evidence-1"));
 
-describe("SkinPactMarket (S1)", () => {
+describe("SkinPactMarket (S1 + S2-mini)", () => {
   let market: SkinPactMarket;
   let seller: HardhatEthersSigner;
   let buyer: HardhatEthersSigner;
   let other: HardhatEthersSigner;
+  let arbiter: HardhatEthersSigner;
 
   beforeEach(async () => {
-    [seller, buyer, other] = await ethers.getSigners();
+    [seller, buyer, other, arbiter] = await ethers.getSigners();
     const Factory = await ethers.getContractFactory("SkinPactMarket");
     market = (await Factory.deploy(
       MAX_PRICE,
       MIN_BOND,
       OFFER_WINDOW,
       CHALLENGE_WINDOW,
+      DELIVERY_WINDOW,
+      arbiter.address,
     )) as unknown as SkinPactMarket;
     await market.waitForDeployment();
   });
@@ -51,6 +55,37 @@ describe("SkinPactMarket (S1)", () => {
     await market.connect(seller).markOfferSent(id, offerHash);
     return id;
   }
+
+  describe("constructor", () => {
+    it("exposes the delivery window and immutable arbiter", async () => {
+      expect(await market.deliveryWindow()).to.equal(BigInt(DELIVERY_WINDOW));
+      expect(await market.arbiter()).to.equal(arbiter.address);
+    });
+
+    it("rejects a zero delivery window or arbiter", async () => {
+      const Factory = await ethers.getContractFactory("SkinPactMarket");
+      await expect(
+        Factory.deploy(
+          MAX_PRICE,
+          MIN_BOND,
+          OFFER_WINDOW,
+          CHALLENGE_WINDOW,
+          0,
+          arbiter.address,
+        ),
+      ).to.be.revertedWithCustomError(market, "InvalidConfig");
+      await expect(
+        Factory.deploy(
+          MAX_PRICE,
+          MIN_BOND,
+          OFFER_WINDOW,
+          CHALLENGE_WINDOW,
+          DELIVERY_WINDOW,
+          ethers.ZeroAddress,
+        ),
+      ).to.be.revertedWithCustomError(market, "InvalidConfig");
+    });
+  });
 
   describe("createListing", () => {
     it("locks the bond and computes the quoted bond", async () => {
@@ -155,6 +190,7 @@ describe("SkinPactMarket (S1)", () => {
       const listing = await market.getListing(id);
       expect(listing.status).to.equal(3n); // OfferSent
       expect(listing.offerIdHash).to.equal(OFFER_HASH);
+      expect(listing.deliveryDeadline).to.be.greaterThan(0n);
       expect(await market.usedOfferIdHash(OFFER_HASH)).to.equal(true);
     });
 
@@ -221,6 +257,14 @@ describe("SkinPactMarket (S1)", () => {
       await market.connect(seller).claimAccepted(claimPending, EVIDENCE_HASH);
       await market.connect(buyer).confirmReceipt(claimPending);
       expect((await market.getListing(claimPending)).status).to.equal(5n);
+    });
+
+    it("cannot confirm while a dispute is open", async () => {
+      const id = await createBuyMark();
+      await market.connect(buyer).openDispute(id, EVIDENCE_HASH);
+      await expect(
+        market.connect(buyer).confirmReceipt(id),
+      ).to.be.revertedWithCustomError(market, "InvalidStatus");
     });
   });
 
@@ -311,6 +355,176 @@ describe("SkinPactMarket (S1)", () => {
     });
   });
 
+  describe("cancelListing", () => {
+    it("refunds the bond, frees the item hash and allows relisting", async () => {
+      const id = await create();
+      await expect(
+        market.connect(buyer).cancelListing(id),
+      ).to.be.revertedWithCustomError(market, "NotSeller");
+
+      await market.connect(seller).cancelListing(id);
+      const listing = await market.getListing(id);
+      expect(listing.status).to.equal(8n); // Cancelled
+      expect(await market.withdrawable(seller.address)).to.equal(BOND);
+      expect(await market.activeItemHash(ITEM_HASH)).to.equal(0n);
+      expect(await ethers.provider.getBalance(await market.getAddress())).to.equal(BOND);
+
+      await market.connect(seller).withdraw();
+      expect(await ethers.provider.getBalance(await market.getAddress())).to.equal(0n);
+
+      await market.connect(seller).createListing(ITEM_HASH, PRICE, { value: BOND });
+      await expect(
+        market.connect(seller).cancelListing(id),
+      ).to.be.revertedWithCustomError(market, "NotActive");
+    });
+
+    it("cannot cancel a funded listing", async () => {
+      const id = await createAndBuy();
+      await expect(
+        market.connect(seller).cancelListing(id),
+      ).to.be.revertedWithCustomError(market, "NotActive");
+    });
+  });
+
+  describe("openDispute", () => {
+    it("lets buyer or seller dispute from OfferSent before the delivery deadline", async () => {
+      const id = await createBuyMark();
+      const listing = await market.getListing(id);
+      expect(listing.deliveryDeadline).to.be.greaterThan(0n);
+
+      await expect(
+        market.connect(other).openDispute(id, EVIDENCE_HASH),
+      ).to.be.revertedWithCustomError(market, "DisputeNotAllowed");
+
+      await market.connect(buyer).openDispute(id, EVIDENCE_HASH);
+      const disputed = await market.getListing(id);
+      expect(disputed.status).to.equal(7n); // Disputed
+      expect(disputed.disputeHash).to.equal(EVIDENCE_HASH);
+      expect(disputed.disputer).to.equal(buyer.address);
+      expect(await market.withdrawable(seller.address)).to.equal(0n);
+    });
+
+    it("allows anyone to escalate after the delivery deadline", async () => {
+      const id = await createBuyMark();
+      await time.increase(DELIVERY_WINDOW + 1);
+      await market.connect(other).openDispute(id, EVIDENCE_HASH);
+      const listing = await market.getListing(id);
+      expect(listing.status).to.equal(7n);
+      expect(listing.disputer).to.equal(other.address);
+    });
+
+    it("rejects zero hashes, wrong states and double disputes", async () => {
+      const id = await createAndBuy();
+      await expect(
+        market.connect(buyer).openDispute(id, EVIDENCE_HASH),
+      ).to.be.revertedWithCustomError(market, "InvalidStatus");
+
+      await market.connect(seller).markOfferSent(id, OFFER_HASH);
+      await expect(
+        market.connect(buyer).openDispute(id, ethers.ZeroHash),
+      ).to.be.revertedWithCustomError(market, "InvalidDisputeHash");
+
+      await market.connect(buyer).openDispute(id, EVIDENCE_HASH);
+      await expect(
+        market.connect(seller).openDispute(id, EVIDENCE_HASH),
+      ).to.be.revertedWithCustomError(market, "InvalidStatus");
+    });
+
+    it("lets only the buyer dispute from ClaimPending before the challenge deadline", async () => {
+      const id = await createBuyMark();
+      await market.connect(seller).claimAccepted(id, EVIDENCE_HASH);
+
+      await expect(
+        market.connect(seller).openDispute(id, EVIDENCE_HASH),
+      ).to.be.revertedWithCustomError(market, "NotBuyer");
+      await expect(
+        market.connect(other).openDispute(id, EVIDENCE_HASH),
+      ).to.be.revertedWithCustomError(market, "NotBuyer");
+
+      await market.connect(buyer).openDispute(id, EVIDENCE_HASH);
+      expect((await market.getListing(id)).status).to.equal(7n);
+    });
+
+    it("rejects a ClaimPending dispute after the challenge deadline", async () => {
+      const id = await createBuyMark();
+      await market.connect(seller).claimAccepted(id, EVIDENCE_HASH);
+      await time.increase(CHALLENGE_WINDOW);
+      await expect(
+        market.connect(buyer).openDispute(id, EVIDENCE_HASH),
+      ).to.be.revertedWithCustomError(market, "DisputeDeadlinePassed");
+    });
+  });
+
+  describe("resolveDispute", () => {
+    async function disputed() {
+      const id = await createBuyMark();
+      await market.connect(buyer).openDispute(id, EVIDENCE_HASH);
+      return id;
+    }
+
+    it("only the arbiter can resolve, only in Disputed, without contradictory flags", async () => {
+      const id = await createBuyMark();
+      await expect(
+        market.connect(arbiter).resolveDispute(id, true, false),
+      ).to.be.revertedWithCustomError(market, "NotDisputed");
+
+      await market.connect(buyer).openDispute(id, EVIDENCE_HASH);
+      await expect(
+        market.connect(other).resolveDispute(id, true, false),
+      ).to.be.revertedWithCustomError(market, "NotArbiter");
+      await expect(
+        market.connect(arbiter).resolveDispute(id, true, true),
+      ).to.be.revertedWithCustomError(market, "InvalidResolution");
+    });
+
+    it("pays price + bond to the seller when the seller wins", async () => {
+      const id = await disputed();
+      await market.connect(arbiter).resolveDispute(id, true, false);
+
+      expect((await market.getListing(id)).status).to.equal(5n); // Completed
+      expect(await market.withdrawable(seller.address)).to.equal(PRICE + BOND);
+      expect(await market.withdrawable(buyer.address)).to.equal(0n);
+      expect(await market.activeItemHash(ITEM_HASH)).to.equal(0n);
+      expect(await ethers.provider.getBalance(await market.getAddress())).to.equal(
+        PRICE + BOND,
+      );
+
+      await expect(
+        market.connect(arbiter).resolveDispute(id, true, false),
+      ).to.be.revertedWithCustomError(market, "NotDisputed");
+    });
+
+    it("refunds the buyer and returns the bond when the buyer wins without slashing", async () => {
+      const id = await disputed();
+      await market.connect(arbiter).resolveDispute(id, false, false);
+
+      expect((await market.getListing(id)).status).to.equal(6n); // Refunded
+      expect(await market.withdrawable(buyer.address)).to.equal(PRICE);
+      expect(await market.withdrawable(seller.address)).to.equal(BOND);
+      expect(await market.activeItemHash(ITEM_HASH)).to.equal(0n);
+    });
+
+    it("awards the seller bond to the buyer when slashing", async () => {
+      const id = await disputed();
+      await market.connect(arbiter).resolveDispute(id, false, true);
+
+      expect((await market.getListing(id)).status).to.equal(6n);
+      expect(await market.withdrawable(buyer.address)).to.equal(PRICE + BOND);
+      expect(await market.withdrawable(seller.address)).to.equal(0n);
+    });
+
+    it("cannot finalize a claim after the buyer disputes it", async () => {
+      const id = await createBuyMark();
+      await market.connect(seller).claimAccepted(id, EVIDENCE_HASH);
+      await market.connect(buyer).openDispute(id, EVIDENCE_HASH);
+      await time.increase(CHALLENGE_WINDOW + 1);
+
+      await expect(
+        market.connect(other).finalizeClaim(id),
+      ).to.be.revertedWithCustomError(market, "NotClaimPending");
+    });
+  });
+
   describe("accounting invariants", () => {
     async function escrowByStatus(): Promise<bigint> {
       let escrow = 0n;
@@ -318,7 +532,7 @@ describe("SkinPactMarket (S1)", () => {
       for (let id = 1n; id < next; id += 1n) {
         const listing = await market.getListing(id);
         if (listing.status === 1n) escrow += listing.bond; // Active
-        if ([2n, 3n, 4n].includes(listing.status)) escrow += listing.price + listing.bond;
+        if ([2n, 3n, 4n, 7n].includes(listing.status)) escrow += listing.price + listing.bond;
       }
       return escrow;
     }
@@ -390,6 +604,33 @@ describe("SkinPactMarket (S1)", () => {
         market.connect(other).expireOrder(expired),
       ).to.be.revertedWithCustomError(market, "NotFunded");
       await expectInvariant("after rejected double settlement");
+    });
+
+    it("keeps balance = escrow + credits with Cancelled and Disputed states", async () => {
+      const hash = (n: number) => keccak256(toUtf8Bytes(`invariant-s2-item-${n}`));
+      const offerHash = (n: number) => keccak256(toUtf8Bytes(`invariant-s2-offer-${n}`));
+
+      // Active -> Cancelled: only the bond remains as a seller credit.
+      const cancelled = await create(hash(1));
+      await market.connect(seller).cancelListing(cancelled);
+      await expectInvariant("after cancel");
+
+      // Disputed: price + bond stay in escrow until the arbiter decides.
+      const disputed = await create(hash(2));
+      await market.connect(buyer).buy(disputed, { value: PRICE });
+      await market.connect(seller).markOfferSent(disputed, offerHash(2));
+      await market.connect(buyer).openDispute(disputed, EVIDENCE_HASH);
+      await expectInvariant("disputed");
+
+      // Buyer wins with the bond slashed to the buyer.
+      await market.connect(arbiter).resolveDispute(disputed, false, true);
+      await expectInvariant("resolved with slash");
+      expect(await market.withdrawable(seller.address)).to.equal(BOND);
+      expect(await market.withdrawable(buyer.address)).to.equal(PRICE + BOND);
+
+      await market.connect(seller).withdraw();
+      await market.connect(buyer).withdraw();
+      await expectInvariant("after S2 withdrawals");
     });
   });
 

@@ -10,6 +10,13 @@ export const RELAY_URL = (import.meta.env.VITE_RELAY_URL || "http://127.0.0.1:87
 export const CONTRACT_ADDRESS =
   import.meta.env.VITE_CONTRACT_ADDRESS || localDeploy?.address || "";
 export const CONTRACT_CONFIGURED = /^0x[0-9a-fA-F]{40}$/.test(CONTRACT_ADDRESS);
+
+const NETWORK_META: Record<number, { name: string; explorer?: string }> = {
+  31337: { name: "Hardhat Local" },
+  11155111: { name: "Sepolia", explorer: "https://sepolia.etherscan.io" },
+};
+export const NETWORK_NAME = NETWORK_META[CHAIN_ID]?.name ?? `Chain ${CHAIN_ID}`;
+export const BLOCK_EXPLORER_URL = NETWORK_META[CHAIN_ID]?.explorer ?? "";
 export const HELPER_URL = (import.meta.env.VITE_HELPER_URL || "http://127.0.0.1:8788").replace(
   /\/+$/,
   "",

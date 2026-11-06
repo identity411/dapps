@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ListingStatus } from "@skinpact/shared";
-import { CONTRACT_CONFIGURED } from "./config";
+import { CONTRACT_CONFIGURED, NETWORK_NAME } from "./config";
 import { readAllListings, type ListingWithId } from "./contract";
 import { getMetadata, type PublicMetadata } from "./relay";
 import { errorText, formatEth, shortAddress } from "./utils";
@@ -62,10 +62,10 @@ export function Market() {
     <section className="page">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">LOCAL MARKET · ACTIVE LISTINGS</p>
+          <p className="eyebrow">MARKET · ACTIVE LISTINGS</p>
           <h1>现货市场</h1>
           <p className="muted">
-            价格与卖家保证金在 Hardhat 本地链托管。物品交付仍通过 Steam trade offer。
+            价格与卖家保证金在 {NETWORK_NAME} 托管。物品交付仍通过 Steam trade offer。
           </p>
         </div>
         <button className="button" onClick={() => setReloadKey((value) => value + 1)}>

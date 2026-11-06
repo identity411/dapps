@@ -1,5 +1,5 @@
 /**
- * Human-readable ABI for SkinPactMarket (S1).
+ * Human-readable ABI for SkinPactMarket (S1 + S2-mini).
  * Keep in sync with contracts/contracts/SkinPactMarket.sol.
  */
 export const SKINPACT_ABI = [
@@ -10,9 +10,12 @@ export const SKINPACT_ABI = [
   "function claimAccepted(uint256 listingId, bytes32 evidenceHash)",
   "function finalizeClaim(uint256 listingId)",
   "function expireOrder(uint256 listingId)",
+  "function cancelListing(uint256 listingId)",
+  "function openDispute(uint256 listingId, bytes32 evidenceHash)",
+  "function resolveDispute(uint256 listingId, bool sellerWins, bool bondToBuyer)",
   "function withdraw()",
   "function quoteBond(uint256 price) view returns (uint256)",
-  "function getListing(uint256 listingId) view returns (tuple(address seller, address buyer, uint256 price, uint256 bond, bytes32 itemHash, bytes32 offerIdHash, bytes32 evidenceHash, uint64 offerDeadline, uint64 challengeDeadline, uint8 status))",
+  "function getListing(uint256 listingId) view returns (tuple(address seller, address buyer, uint256 price, uint256 bond, bytes32 itemHash, bytes32 offerIdHash, bytes32 evidenceHash, uint64 offerDeadline, uint64 challengeDeadline, uint8 status, uint64 deliveryDeadline, bytes32 disputeHash, address disputer))",
   "function withdrawable(address account) view returns (uint256)",
   "function activeItemHash(bytes32 itemHash) view returns (uint256)",
   "function usedOfferIdHash(bytes32 offerIdHash) view returns (bool)",
@@ -21,6 +24,8 @@ export const SKINPACT_ABI = [
   "function minBond() view returns (uint256)",
   "function offerWindow() view returns (uint64)",
   "function challengeWindow() view returns (uint64)",
+  "function deliveryWindow() view returns (uint64)",
+  "function arbiter() view returns (address)",
   "event ListingCreated(uint256 indexed listingId, address indexed seller, bytes32 indexed itemHash, uint256 price, uint256 bond)",
   "event ListingBought(uint256 indexed listingId, address indexed buyer, uint256 price)",
   "event OfferMarked(uint256 indexed listingId, bytes32 offerIdHash)",
@@ -28,5 +33,8 @@ export const SKINPACT_ABI = [
   "event ClaimAccepted(uint256 indexed listingId, bytes32 evidenceHash, uint64 challengeDeadline)",
   "event ClaimFinalized(uint256 indexed listingId)",
   "event OrderExpired(uint256 indexed listingId)",
+  "event ListingCancelled(uint256 indexed listingId, address indexed seller)",
+  "event DisputeOpened(uint256 indexed listingId, address indexed disputer, bytes32 disputeHash)",
+  "event DisputeResolved(uint256 indexed listingId, bool sellerWins, bool bondToBuyer)",
   "event Withdrawn(address indexed account, uint256 amount)",
 ] as const;

@@ -6,6 +6,8 @@ export enum ListingStatus {
   ClaimPending = 4,
   Completed = 5,
   Refunded = 6,
+  Disputed = 7,
+  Cancelled = 8,
 }
 
 export interface Listing {
@@ -19,6 +21,9 @@ export interface Listing {
   offerDeadline: bigint;
   challengeDeadline: bigint;
   status: ListingStatus;
+  deliveryDeadline: bigint;
+  disputeHash: string;
+  disputer: string;
 }
 
 export interface ItemMetadata {

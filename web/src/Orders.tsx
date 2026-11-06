@@ -19,6 +19,7 @@ function statusTone(status: ListingStatus): string {
     case ListingStatus.OfferSent:
       return "live";
     case ListingStatus.ClaimPending:
+    case ListingStatus.Disputed:
       return "warn";
     case ListingStatus.Completed:
       return "ok";
@@ -105,7 +106,8 @@ export function Orders() {
           <p className="eyebrow">ORDERS · ALL LISTINGS</p>
           <h1>订单</h1>
           <p className="muted">
-            从 Active 到 Completed/Refunded 的每一笔链上订单都在这里；切换 MetaMask 账户可查看对应买家或卖家订单。
+            从 Active 到 Completed/Refunded/Cancelled 的每一笔链上订单都在这里；争议订单显示
+            Disputed。切换 MetaMask 账户可查看对应买家或卖家订单。
           </p>
         </div>
         <div className="orders-toolbar">

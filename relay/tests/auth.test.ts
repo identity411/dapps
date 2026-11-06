@@ -76,6 +76,19 @@ test("profile binds a wallet to a SteamID64 and can be updated", async () => {
   const loaded = await request(h.app).get("/profiles/me").set(auth);
   assert.equal(loaded.status, 200);
   assert.equal(loaded.body.steamId64, "76561198000000001");
+  assert.equal(loaded.body.nickname, undefined);
+
+  h.steamProfiles.profiles.set("76561198000000001", {
+    steamId64: "76561198000000001",
+    nickname: "SellerNick",
+    avatarUrl: "https://avatars.steamstatic.com/seller_medium.jpg",
+  });
+  const withSteam = await request(h.app).get("/profiles/me?include=steam").set(auth);
+  assert.equal(withSteam.status, 200);
+  assert.equal(withSteam.body.steamId64, "76561198000000001");
+  assert.equal(withSteam.body.nickname, "SellerNick");
+  assert.equal(withSteam.body.avatarUrl, "https://avatars.steamstatic.com/seller_medium.jpg");
+  assert.equal(withSteam.headers["cache-control"], "no-store");
 
   const invalid = await request(h.app)
     .post("/profiles/me")

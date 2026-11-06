@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { keccak256, toUtf8Bytes } from "ethers";
 import { ListingStatus, type Listing } from "@skinpact/shared";
-import { CHAIN_ID, CONTRACT_CONFIGURED } from "./config";
-import { getSignerContract, readListing } from "./contract";
+import { CHAIN_ID, CONTRACT_CONFIGURED, NETWORK_NAME } from "./config";
+import { getSignerContract, readArbiter, readListing } from "./contract";
 import { useNow } from "./hooks";
 import {
   RelayError,
@@ -27,7 +28,13 @@ import {
   timestampLabel,
 } from "./utils";
 
-const TERMINAL = new Set([ListingStatus.Completed, ListingStatus.Refunded]);
+const TERMINAL = new Set([
+  ListingStatus.Completed,
+  ListingStatus.Refunded,
+  ListingStatus.Cancelled,
+]);
+const ZERO_ADDRESS = `0x${"0".repeat(40)}`;
+const ZERO_HASH = `0x${"0".repeat(64)}`;
 const TIMELINE = [
   ListingStatus.Active,
   ListingStatus.Funded,
@@ -38,8 +45,15 @@ const TIMELINE = [
 
 function statusTone(status: ListingStatus): string {
   if (status === ListingStatus.Completed) return "ok";
-  if (status === ListingStatus.Refunded) return "neutral";
-  if (status === ListingStatus.ClaimPending) return "warn";
+  if (status === ListingStatus.Refunded || status === ListingStatus.Cancelled) {
+    return "neutral";
+  }
+  if (
+    status === ListingStatus.ClaimPending ||
+    status === ListingStatus.Disputed
+  ) {
+    return "warn";
+  }
   return "live";
 }
 
@@ -58,11 +72,16 @@ export function OrderRoom({ listingId }: { listingId: string }) {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [linkedAccount, setLinkedAccount] = useState<BuyerAccountLink | null>(null);
   const [receiptAcknowledged, setReceiptAcknowledged] = useState(false);
+  const [arbiterAddress, setArbiterAddress] = useState<string | null>(null);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [bondToBuyer, setBondToBuyer] = useState(false);
 
   const refresh = useCallback(() => setReloadKey((value) => value + 1), []);
 
   useEffect(() => {
     setReceiptAcknowledged(false);
+    setDisputeReason("");
+    setBondToBuyer(false);
   }, [listing?.status, account]);
 
   useEffect(() => {
@@ -78,8 +97,12 @@ export function OrderRoom({ listingId }: { listingId: string }) {
     let cancelled = false;
     async function load() {
       try {
-        const next = await readListing(listingId);
+        const [next, arbiter] = await Promise.all([
+          readListing(listingId),
+          readArbiter(),
+        ]);
         if (cancelled) return;
+        setArbiterAddress(arbiter);
         if (next.status === ListingStatus.None) {
           setNotFound(true);
           setListing(null);
@@ -174,7 +197,7 @@ export function OrderRoom({ listingId }: { listingId: string }) {
       throw new Error("Relay 未登录。请先在右上角完成钱包签名登录。");
     }
     if (!selectedAccountId) {
-      throw new Error("请先选择一个买家 Steam 账户。");
+      throw new Error("请先选择一个收货 Steam 账户。");
     }
     try {
       // Always copy the current encrypted secret so an account whose URL was
@@ -188,7 +211,7 @@ export function OrderRoom({ listingId }: { listingId: string }) {
   async function saveSelectedAccountToOrder() {
     await runAction("link-account", async () => {
       await linkSelectedAccount();
-      setMessage("已把所选 Steam 账户加密关联到该订单；Trade URL 只会在付款后向卖家 helper 揭示。");
+      setMessage("已把所选 Steam 账户加密关联到该订单；Trade URL 只会在链上 Funded 后向该订单卖家 helper 揭示。");
     });
   }
 
@@ -256,12 +279,59 @@ export function OrderRoom({ listingId }: { listingId: string }) {
     });
   }
 
+  async function cancelListing() {
+    if (!signer) return;
+    await runAction("cancel", async () => {
+      const contract = getSignerContract(signer);
+      const tx = await contract.cancelListing(BigInt(listingId));
+      await tx.wait();
+      setMessage("已取消挂牌，Bond 已进入你的 withdrawable。");
+    });
+  }
+
+  async function openDispute() {
+    if (!signer) return;
+    const reason = disputeReason.trim();
+    if (!reason) return;
+    await runAction("dispute", async () => {
+      const contract = getSignerContract(signer);
+      const hash = keccak256(toUtf8Bytes(reason));
+      const tx = await contract.openDispute(BigInt(listingId), hash);
+      await tx.wait();
+      setDisputeReason("");
+      setMessage(`争议已上链。请把争议理由原文发给 arbiter；链上 dispute hash：${hash}`);
+    });
+  }
+
+  async function resolveDispute(sellerWins: boolean) {
+    if (!signer) return;
+    await runAction(sellerWins ? "resolve-seller" : "resolve-buyer", async () => {
+      const contract = getSignerContract(signer);
+      const tx = await contract.resolveDispute(
+        BigInt(listingId),
+        sellerWins,
+        sellerWins ? false : bondToBuyer,
+      );
+      await tx.wait();
+      setMessage(
+        sellerWins
+          ? "已裁决给卖家：price + bond 进入卖家 withdrawable。"
+          : bondToBuyer
+            ? "已裁决给买家：price + bond 进入买家 withdrawable。"
+            : "已裁决给买家：price 退款，bond 退回卖家。",
+      );
+    });
+  }
+
   if (!CONTRACT_CONFIGURED) {
     return (
       <section className="page narrow">
         <div className="empty-state">
-          <h1>本地合约未配置</h1>
-          <p>请先启动 Hardhat 本地链并运行 npm run deploy:local，然后重启 Web。</p>
+          <h1>合约未配置</h1>
+          <p>
+            请检查 CONTRACT_ADDRESS 与当前网络。本地部署请运行 npm run deploy:local；Sepolia 请使用
+            web/.env.sepolia 并运行 npm run web:sepolia。
+          </p>
           <a className="button" href="#/market">返回市场</a>
         </div>
       </section>
@@ -297,8 +367,19 @@ export function OrderRoom({ listingId }: { listingId: string }) {
   );
   const offerHashMatches =
     report?.offer &&
-    listing.offerIdHash !== `0x${"0".repeat(64)}` &&
+    listing.offerIdHash !== ZERO_HASH &&
     report.offer.offerIdHash.toLowerCase() === listing.offerIdHash.toLowerCase();
+  const deliveryOpen =
+    listing.deliveryDeadline > 0n && !isPast(listing.deliveryDeadline);
+  const canEscalateDispute =
+    listing.status === ListingStatus.OfferSent &&
+    listing.deliveryDeadline > 0n &&
+    isPast(listing.deliveryDeadline);
+  const canOpenDispute =
+    (listing.status === ListingStatus.OfferSent &&
+      (isSeller || isBuyer || canEscalateDispute)) ||
+    (listing.status === ListingStatus.ClaimPending && isBuyer && challengeOpen);
+  const isArbiter = sameAddress(account, arbiterAddress);
 
   function renderTimeline() {
     if (listing!.status === ListingStatus.Refunded) {
@@ -306,7 +387,31 @@ export function OrderRoom({ listingId }: { listingId: string }) {
         <div className="timeline">
           <div className="timeline-step done"><span>Active</span><small>挂牌</small></div>
           <div className="timeline-step done"><span>Funded</span><small>付款</small></div>
+          {listing!.offerIdHash !== ZERO_HASH ? (
+            <div className="timeline-step done"><span>OfferSent</span><small>已发送</small></div>
+          ) : null}
           <div className="timeline-step refunded"><span>Refunded</span><small>已退款</small></div>
+        </div>
+      );
+    }
+    if (listing!.status === ListingStatus.Cancelled) {
+      return (
+        <div className="timeline">
+          <div className="timeline-step done"><span>Active</span><small>挂牌</small></div>
+          <div className="timeline-step refunded"><span>Cancelled</span><small>已取消</small></div>
+        </div>
+      );
+    }
+    if (listing!.status === ListingStatus.Disputed) {
+      return (
+        <div className="timeline">
+          <div className="timeline-step done"><span>Active</span><small>挂牌</small></div>
+          <div className="timeline-step done"><span>Funded</span><small>付款</small></div>
+          <div className="timeline-step done"><span>OfferSent</span><small>已发送</small></div>
+          {listing!.challengeDeadline > 0n ? (
+            <div className="timeline-step done"><span>ClaimPending</span><small>卖家已 claim</small></div>
+          ) : null}
+          <div className="timeline-step refunded"><span>Disputed</span><small>争议中</small></div>
         </div>
       );
     }
@@ -333,7 +438,7 @@ export function OrderRoom({ listingId }: { listingId: string }) {
       <div className="room-heading">
         <div>
           <a href="#/market" className="back-link">← Market</a>
-          <p className="eyebrow">TRADE ROOM · LOCAL CHAIN</p>
+          <p className="eyebrow">TRADE ROOM · {NETWORK_NAME.toUpperCase()}</p>
           <h1>Listing #{listingId}</h1>
           <p className="muted">
             链上状态 <span className={`status-pill ${statusTone(listing.status)}`}>{statusName(listing.status)}</span>
@@ -345,7 +450,7 @@ export function OrderRoom({ listingId }: { listingId: string }) {
 
       {wrongChain ? (
         <div className="banner warn">
-          当前钱包网络不是本地链 {CHAIN_ID}。请在顶部切换到 {CHAIN_ID} 后再执行链上操作。
+          当前钱包网络不是 {NETWORK_NAME}（{CHAIN_ID}）。请在顶部切换后再执行链上操作。
         </div>
       ) : null}
       {error ? <div className="banner error">{error}</div> : null}
@@ -388,6 +493,32 @@ export function OrderRoom({ listingId }: { listingId: string }) {
               <div>
                 <span className="label">Challenge deadline</span>
                 <span>{timestampLabel(listing.challengeDeadline)}</span>
+              </div>
+              <div>
+                <span className="label">Delivery deadline</span>
+                <span>
+                  {listing.deliveryDeadline > 0n
+                    ? `${countdown(listing.deliveryDeadline, now)} · ${timestampLabel(listing.deliveryDeadline)}`
+                    : "—"}
+                </span>
+              </div>
+              <div>
+                <span className="label">Dispute hash</span>
+                <code title={listing.disputeHash}>
+                  {listing.disputeHash === ZERO_HASH ? "—" : shortHash(listing.disputeHash)}
+                </code>
+              </div>
+              <div>
+                <span className="label">Disputer</span>
+                <code title={listing.disputer}>
+                  {listing.disputer === ZERO_ADDRESS ? "—" : shortAddress(listing.disputer)}
+                </code>
+              </div>
+              <div>
+                <span className="label">Arbiter</span>
+                <code title={arbiterAddress ?? undefined}>
+                  {arbiterAddress ? shortAddress(arbiterAddress) : "—"}
+                </code>
               </div>
             </div>
           </div>
@@ -446,9 +577,16 @@ export function OrderRoom({ listingId }: { listingId: string }) {
                       Steam offer。
                     </p>
                     <p className="muted small">
-                      要自测买家流程：在 MetaMask 切到另一个本地账户（需有 test ETH），刷新本页后选择或添加
-                      买家 Steam 账户，再点购买。卖家钱包不能购买自己的 Listing。
+                      要自测买家流程：在 MetaMask 切到另一个测试账户（需有 test ETH），刷新本页后选择或添加
+                      收货 Steam 账户，再点购买。卖家钱包不能购买自己的 Listing。
                     </p>
+                    <button
+                      className="button wide"
+                      disabled={actionBusy === "cancel" || wrongChain}
+                      onClick={() => void cancelListing()}
+                    >
+                      {actionBusy === "cancel" ? "等待交易…" : "取消挂牌并取回 Bond"}
+                    </button>
                   </>
                 ) : (
                   <>
@@ -461,7 +599,7 @@ export function OrderRoom({ listingId }: { listingId: string }) {
                       />
                     ) : (
                       <div className="banner warn">
-                        Relay 未登录，无法读取或保存买家 Steam 账户。
+                        Relay 未登录，无法读取或保存收货 Steam 账户。
                         {authState !== "signing" ? (
                           <button className="link-button" onClick={() => void reauthenticate()}>钱包签名</button>
                         ) : null}
@@ -478,8 +616,8 @@ export function OrderRoom({ listingId }: { listingId: string }) {
 
                     <h3>付款并锁定 Price</h3>
                     <p className="muted small">
-                      付款后 10 分钟内卖家必须让 helper 发 offer 并 mark；否则任何人都能触发退款。S1
-                      没有买家主动取消，请确认金额与物品。
+                      付款后 10 分钟内卖家必须让 helper 发 offer 并 mark；否则任何人都能触发退款。S2-mini
+                      仍不支持买家主动取消，请确认金额与物品。
                     </p>
                     <button
                       className="button primary wide"
@@ -495,7 +633,7 @@ export function OrderRoom({ listingId }: { listingId: string }) {
                     </button>
                     {!selectedAccountId ? (
                       <p className="warning-text small">
-                        请先选择一个已保存的买家 Steam 账户。购买时会先加密关联 Trade URL 再付款，避免付款后无交付信息。
+                        请先选择一个已保存的收货 Steam 账户。购买时会先加密关联 Trade URL 再付款，避免付款后无交付信息。
                       </p>
                     ) : !selectedAccountLinked ? (
                       <p className="muted small">点击购买会先把所选账户关联到订单，再打开 MetaMask 付款。</p>
@@ -545,7 +683,7 @@ export function OrderRoom({ listingId }: { listingId: string }) {
                     {linkedAccount?.linked ? (
                       <div className="subpanel">
                         <p className="ok-text small">
-                          已关联买家 Steam 账户{" "}
+                          已关联收货 Steam 账户{" "}
                           {linkedAccount.nickname || `SteamID64 ${linkedAccount.steamId64}`}。
                           helper 会使用该账户的加密 Trade URL 发送 offer。
                         </p>
@@ -577,7 +715,7 @@ export function OrderRoom({ listingId }: { listingId: string }) {
                       </div>
                     ) : linkedAccount?.linked === false ? (
                       <div className="subpanel">
-                        <h3>补充买家 Steam 账户</h3>
+                        <h3>补充收货 Steam 账户</h3>
                         <p className="muted small">
                           你付款时没有关联 Trade URL。请在卖家发送 offer 前选择/添加账户并关联；若
                           helper 已经发送 offer，请勿更换账户，否则无法按原报价交付。
@@ -606,7 +744,7 @@ export function OrderRoom({ listingId }: { listingId: string }) {
                         )}
                       </div>
                     ) : (
-                      <p className="muted small">正在读取订单关联的买家 Steam 账户…</p>
+                      <p className="muted small">正在读取订单关联的收货 Steam 账户…</p>
                     )}
                     <div className="kv"><span>卖家 offer deadline</span><strong>{offerOpen ? countdown(listing.offerDeadline, now) : "已过期，可退款"}</strong></div>
                     <label className="checkline">
@@ -687,7 +825,40 @@ export function OrderRoom({ listingId }: { listingId: string }) {
                     </button>
                   </>
                 ) : null}
-                {!isSeller && !isBuyer ? <p className="muted">等待买卖双方处理。</p> : null}
+                {!isSeller && !isBuyer && !canEscalateDispute ? (
+                  <p className="muted">等待买卖双方处理。</p>
+                ) : null}
+                {canOpenDispute ? (
+                  <div className="subpanel">
+                    <h3>{isSeller || isBuyer ? "发起争议" : "超时升级为争议"}</h3>
+                    <p className="muted small">
+                      链上只保存理由的 keccak256 hash；请把理由原文发给 arbiter。争议期间资金保持锁定，
+                      由 arbiter 裁决。
+                    </p>
+                    {deliveryOpen ? (
+                      <p className="muted small">
+                        Delivery window 还剩 {countdown(listing.deliveryDeadline, now)}
+                        ；到期后任何人可升级争议。
+                      </p>
+                    ) : null}
+                    <label className="field">
+                      <span>争议理由（原文，不上链）</span>
+                      <input
+                        value={disputeReason}
+                        maxLength={280}
+                        onChange={(event) => setDisputeReason(event.target.value)}
+                        placeholder="例如：卖家未发送 Steam offer / 收到的物品不符"
+                      />
+                    </label>
+                    <button
+                      className="button wide"
+                      disabled={!disputeReason.trim() || actionBusy === "dispute" || wrongChain}
+                      onClick={() => void openDispute()}
+                    >
+                      {actionBusy === "dispute" ? "等待交易…" : "提交争议（链上只存 hash）"}
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
@@ -716,6 +887,31 @@ export function OrderRoom({ listingId }: { listingId: string }) {
                     </button>
                   </>
                 ) : null}
+                {isBuyer && challengeOpen ? (
+                  <div className="subpanel">
+                    <h3>反制卖家 claim</h3>
+                    <p className="muted small">
+                      你认为卖家 claim 不成立（未收到物品或证据不符）？在挑战窗口结束前发起争议，
+                      资金会交给 arbiter 裁决。
+                    </p>
+                    <label className="field">
+                      <span>争议理由（原文，不上链）</span>
+                      <input
+                        value={disputeReason}
+                        maxLength={280}
+                        onChange={(event) => setDisputeReason(event.target.value)}
+                        placeholder="例如：我没有收到物品 / 收到的物品不符"
+                      />
+                    </label>
+                    <button
+                      className="button wide"
+                      disabled={!disputeReason.trim() || actionBusy === "dispute" || wrongChain}
+                      onClick={() => void openDispute()}
+                    >
+                      {actionBusy === "dispute" ? "等待交易…" : "发起争议（链上只存 hash）"}
+                    </button>
+                  </div>
+                ) : null}
                 <button
                   className="button primary wide"
                   disabled={challengeOpen || actionBusy === "finalize" || wrongChain}
@@ -727,13 +923,77 @@ export function OrderRoom({ listingId }: { listingId: string }) {
               </div>
             ) : null}
 
+            {listing.status === ListingStatus.Disputed && account ? (
+              <div className="action-block">
+                <div className="banner warn">
+                  争议中。链上只保存 disputeHash；请把争议理由原文交给 arbiter。裁决前任何人都不能
+                  confirm / finalize / expire。
+                </div>
+                <div className="kv">
+                  <span>Dispute hash</span>
+                  <code title={listing.disputeHash}>{shortHash(listing.disputeHash)}</code>
+                </div>
+                <div className="kv">
+                  <span>发起人</span>
+                  <code>
+                    {listing.disputer === ZERO_ADDRESS ? "—" : shortAddress(listing.disputer)}
+                  </code>
+                </div>
+                <div className="kv">
+                  <span>Arbiter</span>
+                  <code>{arbiterAddress ? shortAddress(arbiterAddress) : "—"}</code>
+                </div>
+                {isArbiter ? (
+                  <>
+                    <label className="checkline">
+                      <input
+                        type="checkbox"
+                        checked={bondToBuyer}
+                        onChange={(event) => setBondToBuyer(event.target.checked)}
+                      />
+                      <span>判买家胜时，把 seller bond 一并补偿给买家。</span>
+                    </label>
+                    <div className="orders-toolbar">
+                      <button
+                        className="button"
+                        disabled={actionBusy === "resolve-seller" || wrongChain}
+                        onClick={() => void resolveDispute(true)}
+                      >
+                        {actionBusy === "resolve-seller" ? "等待交易…" : "判卖家胜（付款给卖家）"}
+                      </button>
+                      <button
+                        className="button primary"
+                        disabled={actionBusy === "resolve-buyer" || wrongChain}
+                        onClick={() => void resolveDispute(false)}
+                      >
+                        {actionBusy === "resolve-buyer" ? "等待交易…" : "判买家胜（退款给买家）"}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="muted small">
+                    等待 arbiter 裁决。只有链上 arbiter 地址（
+                    {arbiterAddress ? shortAddress(arbiterAddress) : "—"}）可以结算这笔争议。
+                  </p>
+                )}
+              </div>
+            ) : null}
+
             {terminal && account ? (
               <div className="action-block">
-                <h3>{listing.status === ListingStatus.Completed ? "交易完成" : "已退款"}</h3>
+                <h3>
+                  {listing.status === ListingStatus.Completed
+                    ? "交易完成"
+                    : listing.status === ListingStatus.Cancelled
+                      ? "已取消"
+                      : "已退款"}
+                </h3>
                 <p className="muted small">
                   {listing.status === ListingStatus.Completed
                     ? "款项已进入卖家 withdrawable。若你是卖家，请在顶部 Withdraw。"
-                    : "买家 Price 与卖家 Bond 已进入各自 withdrawable；请在顶部 Withdraw。"}
+                    : listing.status === ListingStatus.Cancelled
+                      ? "卖家 Bond 已进入卖家 withdrawable；该 listing 没有买家资金。请在顶部 Withdraw。"
+                      : "退款已结算；买家与卖家的最终金额以各自 withdrawable 为准。请在顶部 Withdraw。"}
                 </p>
                 <p className="muted small">Relay 会在 5 秒内清理该 listing 的买家 Trade URL 密文。</p>
               </div>
@@ -743,14 +1003,16 @@ export function OrderRoom({ listingId }: { listingId: string }) {
           </div>
 
           <div className="panel">
-            <h2>S1 安全边界</h2>
+            <h2>S2-mini 安全边界</h2>
             <ul className="checklist">
-              <li>只在 Hardhat 本地链 / 测试 ETH 上运行，不部署到 Sepolia。</li>
+              <li>只在 Hardhat 本地链或 Sepolia 测试网 / 测试 ETH 上运行。</li>
               <li>链上不保存完整 Trade URL、Steam 凭据或平台托管资产。</li>
               <li>买家在 Steam 接受 offer，并使用手机 Steam Guard 确认；helper 不会代买家接受。</li>
               <li>卖家本地 helper 不持有钱包私钥，不会自动签 mark/claim。</li>
-              <li>Seller claim 后存在挑战窗口；S1 没有争议仲裁，超时后任何人都能 finalize。</li>
-              <li>金额结算为 pull payment，必须主动 withdraw；S1 不支持取消/仲裁。</li>
+              <li>Seller claim 后有挑战窗口；buyer 可在窗口内发起争议。</li>
+              <li>OfferSent 超时后任何人可把订单升级为 Disputed；arbiter 是链上信任点。</li>
+              <li>争议证据只存 keccak256 hash；理由原文必须线下交给 arbiter，链上无法验证内容。</li>
+              <li>金额结算为 pull payment，必须主动 withdraw；取消、退款、裁决都进入 withdrawable。</li>
             </ul>
           </div>
         </div>

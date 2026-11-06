@@ -2,20 +2,21 @@
 
 一个面向 CS2 饰品的 DApp 课程项目原型：用 **测试 ETH** 托管交易款，用 **Steam trade offer** 交付饰品，绕开第三方平台手续费，同时不把 Steam 登录态或买家 Trade URL 交给平台托管。
 
-> **S1 只允许本地 Hardhat 链（chainId 31337）。**
-> 当前合约没有争议、仲裁、卖家取消和 `OfferSent` 后超时退款，**绝对不能部署到 Sepolia 或其他公开网络**。S2 补齐这些路径后才考虑 testnet。
+> **S2-mini 已部署到 Sepolia（chainId 11155111），仍只使用 test ETH，禁止主网或真实价值。**
+> 合约 `0x2Ffca05611801F532Afc6135b56baBEB0D7460eF`，部署 tx `0xa13facad2e103aa5df7fe0d876f73e742cb3ba4c9c9a7a037d446f52c22e04e6`，Etherscan 已 verified；更完整的仲裁策略仍是后续工作。
 
 ## 当前状态
 
 | 部分 | 状态 |
 |---|---|
-| `SkinPactMarket` S1 合约 + 状态机 | ✅ 本地部署可用，20 个测试通过 |
+| `SkinPactMarket` S2-mini 合约 + 状态机 | ✅ 本地部署可用，36 个测试通过 |
+| Sepolia 部署 + verify + smoke | ✅ 合约 `0x2Ffca…460eF`，block 12077649；[Etherscan verified](https://sepolia.etherscan.io/address/0x2Ffca05611801F532Afc6135b56baBEB0D7460eF#code)；11 笔 smoke tx（Steam/Relay/helper 未参与） |
 | 共享 TypeScript 包（哈希 / ABI / Trade URL 解析） | ✅ 1 个测试通过 |
 | Relay（钱包登录 / 库存 / 加密 Buyer URL vault / 买家 Steam 账户 / helper 配对 / 证据） | ✅ 18 个测试通过 |
 | 卖家本地 helper（Steam 登录态、发 offer、观测 Accepted、本地账本、loopback 扫码 API） | ✅ 12 个单元测试通过；Web 扫码登录/自动配对已接入；已用真实 Steam 账号跑通发 offer 与 Accepted 证据 |
-| React Web（Market / Orders / Accounts / Sell / Trade Room / withdraw） | ✅ 构建通过；手动 UI 走查待 review |
-| 本地链 P1–P4 E2E（合约 + Relay） | ✅ `npm run e2e:local` 通过；Steam 传输为明确标注的 mock |
-| Stage 0 真实 Steam offer | ✅ 已完成（见 Stage 0 spec）；S1 helper 已用真实账号复测 |
+| React Web（Market / Orders / Accounts / Sell / Trade Room / withdraw / cancel / dispute / resolve） | ✅ 构建通过；手动 UI 走查待 review |
+| 本地链 P1–P8 E2E（合约 + Relay） | ✅ `npm run e2e:local` 通过；Steam 传输为明确标注的 mock |
+| Stage 0 真实 Steam offer | ✅ 已完成（见 Stage 0 spec）；helper 已用真实账号复测 |
 
 真实 Steam 交付需要卖家扫码登录自己的 Steam 账号并由买家在手机 Steam Guard 中接受，不能由自动化测试代替，也不应伪造。
 
@@ -23,7 +24,7 @@
 
 ```mermaid
 flowchart LR
-    Buyer["Buyer Web<br/>MetaMask"] -->|price| Contract["SkinPactMarket<br/>Hardhat 31337"]
+    Buyer["Buyer Web<br/>MetaMask"] -->|price| Contract["SkinPactMarket<br/>Hardhat 31337 / Sepolia 11155111"]
     Seller["Seller Web<br/>MetaMask"] -->|bond + listing| Contract
     Buyer -->|"加密 Trade URL"| Relay["Relay<br/>Express + SQLite"]
     Seller -->|"SteamID64 (auto from QR) / metadata"| Relay
@@ -33,9 +34,12 @@ flowchart LR
     Helper -->|"trade offer from seller account"| Steam["Steam"]
     Steam -->|"buyer accepts + Steam Guard"| Buyer
     Helper -->|"offer ID hash / Accepted(3) evidence"| Relay
-    Seller -->|"markOfferSent / claimAccepted"| Contract
+    Seller -->|"markOfferSent / claimAccepted / cancelListing"| Contract
+    Buyer -->|"openDispute"| Contract
+    Seller -->|"openDispute"| Contract
+    Arbiter["Arbiter<br/>immutable EOA / Safe"] -->|"resolveDispute"| Contract
     Contract -->|"pull payments"| Seller
-    Contract -->|"refund if no offer"| Buyer
+    Contract -->|"refund if no offer / buyer wins dispute"| Buyer
 ```
 
 - **Relay 不托管资金或饰品，也不保存 Steam session。**
@@ -102,6 +106,29 @@ helper 会把 helper token、Steam refresh token 和本地发送账本写入 `he
 
 `npm run helper -- --cli` 是旧的无浏览器终端流程；`--check` 只检查本地状态，不登录 Steam、不发 offer；`--once` 只跑一轮轮询（仅旧 CLI 流程）。
 
+## Sepolia 部署（已完成）
+
+- 合约：[0x2Ffca05611801F532Afc6135b56baBEB0D7460eF](https://sepolia.etherscan.io/address/0x2Ffca05611801F532Afc6135b56baBEB0D7460eF#code)（Etherscan verified）
+- 部署 tx：`0xa13facad2e103aa5df7fe0d876f73e742cb3ba4c9c9a7a037d446f52c22e04e6`
+- Block：`12077649`
+- Chain：`11155111`
+- Arbiter：`0xfc73C38cD376D01F9B145e78fa6968F081e66D53`
+- Constructor：maxPrice `0.1 ETH` / minBond `0.001 ETH` / offerWindow `600s` / challengeWindow `300s` / deliveryWindow `3600s`
+- Smoke：`experiments/e1/sepolia-smoke.json`，11 笔真实 Sepolia 交易（create → buy → mark → confirm、cancel、dispute → resolve；Steam/Relay/helper 未参与）
+
+重新部署/验证/采数：
+
+```bash
+# 在仓库根 .env 填入：
+# SEPOLIA_RPC_URL / DEPLOYER_PRIVATE_KEY / ARBITER_ADDRESS / ETHERSCAN_API_KEY
+npm run preflight:sepolia # 只打印公开地址/余额与缺失项
+npm run deploy:sepolia    # 部署 + 尝试 verify，写 deployments/sepolia.json
+npm run smoke:sepolia     # 真实 Sepolia on-chain smoke + gas 数据
+npm run web:sepolia       # 使用 web/.env.sepolia 连接 Sepolia
+```
+
+本地链演示仍可用；Sepolia demo 使用上面的地址与 `web/.env.sepolia`。
+
 ## 最小交易流程
 
 Market 只展示 `Active` 挂牌；**Orders** 页展示所有状态的订单，并可按当前 MetaMask 钱包筛选“只看我的”。**Accounts** 页按当前 MetaMask 钱包管理买家 Steam 账户，可在下单前先添加。买卖双方都可以从订单卡进入同一个 Trade Room。
@@ -111,13 +138,15 @@ Market 只展示 `Active` 挂牌；**Orders** 页展示所有状态的订单，�
 3. **买家付款**：点击 Buy 时先把所选账户关联到该 Listing，再调用 `buy(listingId)` 精确支付 price，listing 进入 `Funded`，offer deadline 开始。若 Funded 订单仍缺少关联账户，可在卖家发 offer 前从 Trade Room 补充。
 4. **helper 发 offer**：卖家 helper 拉取该卖家的 `Funded` 订单，校验 buyer SteamID/物品，从卖家 Steam 登录态创建 offer，并向 Relay 上报 offer ID hash。
 5. **卖家 mark**：卖家在 Trade Room 看到 helper 上报的 hash 后签 `markOfferSent`。**此动作不放款**，只是链上声明。`OfferSent` 之前买家不要接受 Steam offer。
-6. 交付完成后，三条路径之一：
+6. 交付完成后，按情况走以下路径：
    - **Buyer confirm**：买家勾选“已收到物品”并调 `confirmReceipt`，立即 `Completed`，seller withdrawable += price + bond。
    - **Seller claim**：helper 观测到 Steam `Accepted(3)` 并上报证据；卖家调 `claimAccepted(evidenceHash)` 进入 `ClaimPending`；挑战窗口结束后任何人可 `finalizeClaim`。
    - **No offer**：若卖家在 offer window 内未 mark，截止后任何人可 `expireOrder`，buyer price 与 seller bond 分别进入 pull payment。
+   - **Dispute**：`OfferSent` 后 buyer/seller 可 `openDispute(disputeHash)`；`deliveryDeadline` 到期后任何人可把订单升级为 `Disputed`。arbiter 调 `resolveDispute(sellerWins, bondToBuyer)`：seller 胜 → `Completed`，buyer 胜 → `Refunded`，可选择把 bond 补偿给 buyer。
+   - **Cancel**：seller 可在 `Active` 时 `cancelListing` 取回 bond。S2-mini 不做 `abortBySeller`；`Funded` 的卖家出口仍是 deadline 后 `expireOrder`。
 7. 在 Header 查看 withdrawable 并主动 `withdraw()`。
 
-`OfferSent` 后买家不确认、卖家不 claim 的场景在 S1 会锁住资金；S1 不做争议或超时退款，只用于本地受控演示。
+`OfferSent` 后如果买家不确认、卖家也不 claim，双方可以发起争议；`deliveryDeadline` 到期后任何人都能把订单升级为 `Disputed`，由 arbiter 裁决。S2-mini 不提供 `OfferSent` 后的自动退款；链上只保存 `disputeHash`，争议证据原文由 arbiter 线下审核，arbiter 是明确的链上信任点。
 
 ### 真实 Steam 手动验收（已跑通一次）
 
@@ -128,13 +157,13 @@ Market 只展示 `Active` 挂牌；**Orders** 页展示所有状态的订单，�
 5. helper 观测到 `Accepted(3)` 后在 Relay 写入证据，卖家 claim；或买家直接确认收货。
 6. 录屏/截图中遮挡 Steam 个人信息、Trade URL token、钱包私钥和 session。
 
-如果真实链路阻塞，S1 的 E2E 使用**明确标注的 mock**（不接触 Steam），不能把 mock 当作真实 Accept 证据。
+如果真实链路阻塞，E2E 使用**明确标注的 mock**（不接触 Steam），不能把 mock 当作真实 Accept 证据。
 
 ## 测试与验证
 
 ```bash
 npm test          # shared + contract + relay + helper
-npm run e2e:local # P1 buyer confirm / P2 claim+finalize / P3 expire / P4 privacy
+npm run e2e:local # P1–P8：正常路径、退款、取消、争议与 arbiter 裁决
 npm run typecheck # shared + relay + helper + web + E2E scripts
 npm run build     # Web TypeScript + Vite build
 ```
@@ -145,6 +174,10 @@ E2E 会启动一个临时的 Hardhat 节点、部署合约、以内存 SQLite �
 - P2：claim → ClaimPending → 窗口前 finalize revert → 时间推进 → permissionless finalize。
 - P3：不 mark → 超时 expire → Refunded；buyer price、seller bond 退回 pull payment；`OfferSent` 不可 expire。
 - P4：未 Funded/错误 seller/错误 scope 拒绝 reveal；DB、metadata、report 无 URL token；终态清理。
+- P5：`Active` → seller `cancelListing` → `Cancelled`；bond 退回 seller。
+- P6：`OfferSent` → buyer dispute → arbiter 判 buyer 胜（不没收）→ `Refunded`；price 退 buyer，bond 退 seller。
+- P7：`ClaimPending` → buyer dispute → arbiter 判 seller 胜 → `Completed`；seller 得 price + bond。
+- P8：`OfferSent` → seller dispute → arbiter 判 buyer 胜并没收 bond → `Refunded`；buyer 得 price + bond。
 
 ## 环境变量
 
@@ -153,6 +186,8 @@ E2E 会启动一个临时的 Hardhat 节点、部署合约、以内存 SQLite �
 | 变量 | 说明 |
 |---|---|
 | `CONTRACT_ADDRESS` | 本地部署地址；复制自 `deployments/local.json` |
+| `DELIVERY_WINDOW_SECONDS` | `markOfferSent` 后多久允许任何人升级争议，默认 3600 |
+| `ARBITER_ADDRESS` | 争议裁决地址；留空时 `deploy:local` 使用 deployer |
 | `JWT_SECRET` | Relay 钱包登录 JWT；≥ 16 字符 |
 | `RELAY_ENCRYPTION_KEY` | AES-256-GCM 密钥；32 bytes，base64 或 64 hex |
 | `DB_PATH` | SQLite 路径，默认 `data/skinpact.db`（gitignored） |
@@ -164,15 +199,18 @@ E2E 会启动一个临时的 Hardhat 节点、部署合约、以内存 SQLite �
 
 Web 的 Vite 默认读取 `deployments/local.json` 与本地默认地址，通常无需额外 env。
 
-## S1 安全边界与已知限制
+## S2-mini 安全边界与已知限制
 
-- 只支持本地链和测试 ETH；不允许真实货币、贵重饰品或公开网络。
+- 支持 Hardhat 本地链和 Sepolia 测试网；只使用 test ETH，不允许真实货币或贵重饰品。
 - Buyer Trade URL 是私密 bearer URL：链上永不保存，Web 卖家 UI 不展示，Relay 加密保存并在终态删除；日志不打印 URL/请求体。买家 Steam 账户按钱包隔离，列表 API 只返回昵称、头像、SteamID64 与账户 ID，绝不返回 Trade URL；移除已保存账户不会删除已关联订单中的加密 URL，订单终态后仍按原逻辑清理。
-- 没有 `Disputed`、Arbiter、`openDispute`/`resolveDispute`、`abortBySeller`、卖家取消。
-- `OfferSent` 后买家一直不接受且卖家不 claim 时，资金会锁在合约中；S1 不退款。
-- 卖家在 `markOfferSent` 之前买家可以接受 Steam offer，会造成链上状态与事实不一致；流程和 UI 强调“先 mark 再接受”，S1 只用受控账号。
-- 卖家可以 mark 但实际上不发 offer；S1 无链上仲裁，只用于本地 demo。
-- `claimAccepted` 证据是链下声明；S2 才补挑战/仲裁与更严格的证据策略。
+- `Disputed` 由 immutable arbiter 裁决；arbiter 是中心化信任点，密钥丢失会导致争议无法裁决。公开 demo 应使用专用 EOA 或 2-of-3 Safe。
+- 链上只保存 `disputeHash` 与 `disputer`；争议理由/证据原文不上链，由 arbiter 线下审核，链上无法验证内容。
+- `OfferSent` 后 buyer/seller 可发起争议；`deliveryWindow` 到期后任何人可升级为 `Disputed`。S2-mini 不提供 `OfferSent` 后的自动退款；`Disputed` 下不能 confirm / finalize / expire。
+- 没有 `abortBySeller`；`Funded` 的卖家出口是 deadline 后 `expireOrder`。
+- 卖家在 `markOfferSent` 之前买家可以接受 Steam offer，会造成链上状态与事实不一致；流程和 UI 强调“先 mark 再接受”，S2-mini 只用受控账号。
+- 卖家可以 mark 但实际上不发 offer；现在可通过 dispute 交给 arbiter，但证据仍是链下声明。
+- `claimAccepted` 的 `evidenceHash` 仍是链下声明；buyer 可在挑战窗口内 `openDispute` 反制。
+- `InEscrow(11)` 不视为最终交付；helper 不 claim，buyer 走 dispute。
 - 结算使用 pull payment：双方必须主动 `withdraw()`。
 - helper 是单卖家、单机组件：已登录的 Steam 账号会绑定到当前配对的钱包。请勿在共用/不受信任的电脑上运行；切换卖家钱包前先关闭 helper 并清除 `helper/.skinpact-helper/` 中的本地 Steam 登录态。
 - helper 不自动确认 Steam Mobile Guard，不自动签链、不自动提现、不替买家接受。
@@ -185,9 +223,9 @@ shared/          ABI、canonical JSON/keccak、hash、Trade URL parser
 relay/           Express + SQLite，钱包登录、inventory、URL vault、helper API
 helper/          卖家本地 Node helper（steam-session + trade offer manager）
 web/             React + Vite + ethers v6
-scripts/stage0/  Stage 0 可行性演示（只作参考，不复用于 S1）
+scripts/stage0/  Stage 0 可行性演示（只作参考，不复用于 S1/S2）
 scripts/         local E2E
-specs/           MVP / Stage 0 / Stage 1 review specs
+specs/           MVP / Stage 0 / Stage 1 / S2-mini specs
 ```
 
 相关 spec：
@@ -195,6 +233,9 @@ specs/           MVP / Stage 0 / Stage 1 review specs
 - [MVP spec](./specs/2026-11-01-dapp-project-mvp-spec.md)
 - [Stage 0 Steam feasibility](./specs/2026-11-02-stage-0-steam-tradeoffer-spec.md)
 - [Stage 1 vertical slice](./specs/2026-11-03-stage-1-vertical-slice-spec.md)
+- [Stage 2-mini refund/dispute](./specs/2026-11-06-stage-2-minimal-refund-dispute-spec.md)
+- [Sepolia deployment](./specs/2026-11-06-sepolia-deployment-spec.md)
+- [Course delivery & report plan](./specs/2026-11-06-course-delivery-report-spec.md)
 
 ## 常见问题
 

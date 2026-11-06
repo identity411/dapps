@@ -3,11 +3,12 @@ pragma solidity ^0.8.24;
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-/// @title SkinPactMarket (S1 vertical slice)
+/// @title SkinPactMarket (S1 + S2-mini)
 /// @notice Testnet-only escrow for a single CS2 item listing. Steam delivery is
 ///         observed off-chain; this contract never claims to verify Steam.
-/// @dev S1 intentionally omits Dispute/Arbiter/abort/cancel. Do not deploy this
-///      version to a public network; S2 adds those paths before Sepolia.
+/// @dev S2-mini adds seller cancellation and an arbiter-backed dispute path so
+///      no non-terminal state can lock escrow forever. Steam evidence remains
+///      off-chain; the arbiter is a disclosed trust point.
 contract SkinPactMarket is ReentrancyGuard {
     enum Status {
         None,
@@ -16,7 +17,9 @@ contract SkinPactMarket is ReentrancyGuard {
         OfferSent,
         ClaimPending,
         Completed,
-        Refunded
+        Refunded,
+        Disputed,
+        Cancelled
     }
 
     struct Listing {
@@ -30,12 +33,17 @@ contract SkinPactMarket is ReentrancyGuard {
         uint64 offerDeadline;
         uint64 challengeDeadline;
         Status status;
+        uint64 deliveryDeadline;
+        bytes32 disputeHash;
+        address disputer;
     }
 
     uint256 public immutable maxPrice;
     uint256 public immutable minBond;
     uint64 public immutable offerWindow;
     uint64 public immutable challengeWindow;
+    uint64 public immutable deliveryWindow;
+    address public immutable arbiter;
 
     uint256 public nextListingId = 1;
 
@@ -57,6 +65,9 @@ contract SkinPactMarket is ReentrancyGuard {
     event ClaimAccepted(uint256 indexed listingId, bytes32 evidenceHash, uint64 challengeDeadline);
     event ClaimFinalized(uint256 indexed listingId);
     event OrderExpired(uint256 indexed listingId);
+    event ListingCancelled(uint256 indexed listingId, address indexed seller);
+    event DisputeOpened(uint256 indexed listingId, address indexed disputer, bytes32 disputeHash);
+    event DisputeResolved(uint256 indexed listingId, bool sellerWins, bool bondToBuyer);
     event Withdrawn(address indexed account, uint256 amount);
 
     error InvalidConfig();
@@ -70,16 +81,22 @@ contract SkinPactMarket is ReentrancyGuard {
     error NotFunded();
     error NotOfferSent();
     error NotClaimPending();
+    error NotDisputed();
     error NotSeller();
     error NotBuyer();
+    error NotArbiter();
     error SelfBuy();
     error InvalidStatus();
     error InvalidOfferHash();
     error InvalidEvidenceHash();
+    error InvalidDisputeHash();
+    error InvalidResolution();
     error OfferHashAlreadyUsed();
     error OfferDeadlinePassed();
     error OfferDeadlineNotReached();
     error ChallengeNotExpired();
+    error DisputeDeadlinePassed();
+    error DisputeNotAllowed();
     error NothingToWithdraw();
     error WithdrawFailed();
 
@@ -87,15 +104,25 @@ contract SkinPactMarket is ReentrancyGuard {
         uint256 maxPrice_,
         uint256 minBond_,
         uint64 offerWindow_,
-        uint64 challengeWindow_
+        uint64 challengeWindow_,
+        uint64 deliveryWindow_,
+        address arbiter_
     ) {
-        if (maxPrice_ == 0 || minBond_ == 0 || offerWindow_ == 0 || challengeWindow_ == 0) {
-            revert InvalidConfig();
-        }
+        if (
+            maxPrice_ == 0 ||
+            minBond_ == 0 ||
+            offerWindow_ == 0 ||
+            challengeWindow_ == 0 ||
+            deliveryWindow_ == 0 ||
+            arbiter_ == address(0)
+        ) revert InvalidConfig();
+
         maxPrice = maxPrice_;
         minBond = minBond_;
         offerWindow = offerWindow_;
         challengeWindow = challengeWindow_;
+        deliveryWindow = deliveryWindow_;
+        arbiter = arbiter_;
     }
 
     function quoteBond(uint256 price) public view returns (uint256) {
@@ -122,7 +149,10 @@ contract SkinPactMarket is ReentrancyGuard {
             evidenceHash: bytes32(0),
             offerDeadline: 0,
             challengeDeadline: 0,
-            status: Status.Active
+            status: Status.Active,
+            deliveryDeadline: 0,
+            disputeHash: bytes32(0),
+            disputer: address(0)
         });
         activeItemHash[itemHash] = listingId;
 
@@ -144,7 +174,8 @@ contract SkinPactMarket is ReentrancyGuard {
     }
 
     /// @notice The seller's declaration that an offer was created. This never
-    ///         releases escrow.
+    ///         releases escrow. It also starts the window after which anyone can
+    ///         escalate a stuck order to the arbiter.
     function markOfferSent(uint256 listingId, bytes32 offerIdHash) external {
         Listing storage listing = _get(listingId);
         if (msg.sender != listing.seller) revert NotSeller();
@@ -155,13 +186,15 @@ contract SkinPactMarket is ReentrancyGuard {
 
         usedOfferIdHash[offerIdHash] = true;
         listing.offerIdHash = offerIdHash;
+        listing.deliveryDeadline = uint64(block.timestamp) + deliveryWindow;
         listing.status = Status.OfferSent;
 
         emit OfferMarked(listingId, offerIdHash);
     }
 
     /// @notice Buyer fast path. Allowed in Funded (seller forgot to mark),
-    ///         OfferSent, or ClaimPending. Irreversible.
+    ///         OfferSent, or ClaimPending. Irreversible. Disputed orders can
+    ///         only be settled by the arbiter.
     function confirmReceipt(uint256 listingId) external {
         Listing storage listing = _get(listingId);
         if (msg.sender != listing.buyer) revert NotBuyer();
@@ -211,6 +244,75 @@ contract SkinPactMarket is ReentrancyGuard {
         withdrawable[listing.seller] += listing.bond;
 
         emit OrderExpired(listingId);
+    }
+
+    /// @notice Seller can withdraw an unsold listing and recover the bond.
+    function cancelListing(uint256 listingId) external {
+        Listing storage listing = _get(listingId);
+        if (msg.sender != listing.seller) revert NotSeller();
+        if (listing.status != Status.Active) revert NotActive();
+
+        listing.status = Status.Cancelled;
+        _clearActiveItem(listingId, listing);
+        withdrawable[listing.seller] += listing.bond;
+
+        emit ListingCancelled(listingId, msg.sender);
+    }
+
+    /// @notice Opens an off-chain-evidence dispute. The evidence itself is not
+    ///         stored on-chain; disputeHash is a commitment reviewed by the
+    ///         arbiter. OfferSent: either party before deliveryDeadline, anyone
+    ///         after it. ClaimPending: only the buyer before challengeDeadline.
+    function openDispute(uint256 listingId, bytes32 evidenceHash) external {
+        Listing storage listing = _get(listingId);
+        if (evidenceHash == bytes32(0)) revert InvalidDisputeHash();
+
+        if (listing.status == Status.OfferSent) {
+            bool isParty = msg.sender == listing.seller || msg.sender == listing.buyer;
+            if (!isParty && block.timestamp < listing.deliveryDeadline) {
+                revert DisputeNotAllowed();
+            }
+        } else if (listing.status == Status.ClaimPending) {
+            if (msg.sender != listing.buyer) revert NotBuyer();
+            if (block.timestamp >= listing.challengeDeadline) revert DisputeDeadlinePassed();
+        } else {
+            revert InvalidStatus();
+        }
+
+        listing.disputeHash = evidenceHash;
+        listing.disputer = msg.sender;
+        listing.status = Status.Disputed;
+
+        emit DisputeOpened(listingId, msg.sender, evidenceHash);
+    }
+
+    /// @notice Arbiter resolves a dispute. A seller win releases price + bond to
+    ///         the seller. A buyer win refunds the price, and optionally awards
+    ///         the seller bond to the buyer as compensation.
+    function resolveDispute(
+        uint256 listingId,
+        bool sellerWins,
+        bool bondToBuyer
+    ) external {
+        Listing storage listing = _get(listingId);
+        if (msg.sender != arbiter) revert NotArbiter();
+        if (listing.status != Status.Disputed) revert NotDisputed();
+        if (sellerWins && bondToBuyer) revert InvalidResolution();
+
+        if (sellerWins) {
+            _settleSeller(listingId, listing);
+        } else {
+            listing.status = Status.Refunded;
+            _clearActiveItem(listingId, listing);
+            withdrawable[listing.buyer] += listing.price;
+            if (bondToBuyer) {
+                withdrawable[listing.buyer] += listing.bond;
+            } else {
+                withdrawable[listing.seller] += listing.bond;
+            }
+        }
+
+        emit DisputeResolved(listingId, sellerWins, bondToBuyer);
     }
 
     function withdraw() external nonReentrant {

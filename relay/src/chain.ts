@@ -18,6 +18,9 @@ function normalizeListing(raw: any): Listing {
     offerDeadline: BigInt(raw.offerDeadline),
     challengeDeadline: BigInt(raw.challengeDeadline),
     status: Number(raw.status) as ListingStatus,
+    deliveryDeadline: BigInt(raw.deliveryDeadline),
+    disputeHash: String(raw.disputeHash),
+    disputer: String(raw.disputer).toLowerCase(),
   };
 }
 

@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { BrowserProvider, type JsonRpcSigner } from "ethers";
-import { CHAIN_ID, RPC_URL } from "./config";
+import { BLOCK_EXPLORER_URL, CHAIN_ID, NETWORK_NAME, RPC_URL } from "./config";
 import { authenticateRelay } from "./relay";
 import { errorText } from "./utils";
 
@@ -50,9 +50,12 @@ async function switchChain(): Promise<void> {
         params: [
           {
             chainId: `0x${CHAIN_ID.toString(16)}`,
-            chainName: `Hardhat Local ${CHAIN_ID}`,
+            chainName: NETWORK_NAME,
             nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
             rpcUrls: [RPC_URL],
+            ...(BLOCK_EXPLORER_URL
+              ? { blockExplorerUrls: [BLOCK_EXPLORER_URL] }
+              : {}),
           },
         ],
       });

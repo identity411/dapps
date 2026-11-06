@@ -1,0 +1,102 @@
+{
+  "generatedAt": "2026-11-06T16:17:17.478Z",
+  "network": "sepolia",
+  "chainId": 11155111,
+  "contract": "0x2Ffca05611801F532Afc6135b56baBEB0D7460eF",
+  "deploymentBlock": 12077649,
+  "seller": "0x82525958048270C794040D502a4A177efB32475d",
+  "buyer": "0xa685086fCA2f6C57551D804E2Cee71a30B064379",
+  "arbiter": "0xfc73C38cD376D01F9B145e78fa6968F081e66D53",
+  "priceWei": "10000000000000000",
+  "bondWei": "1000000000000000",
+  "transactions": [
+    {
+      "step": "createListing",
+      "txHash": "0x0ce7d887cfa5e1ab9a99a65af6d6721b3d78b98c3b995a3ae2d1a5e528add987",
+      "blockNumber": 12077670,
+      "gasUsed": "709721",
+      "gasPrice": "19",
+      "feeWei": "13484699"
+    },
+    {
+      "step": "buy",
+      "txHash": "0xf6db613155cde61bdecd15ee6a550efc9ed20b8e30767d8d43c3e58d2191e206",
+      "blockNumber": 12077671,
+      "gasUsed": "152614",
+      "gasPrice": "19",
+      "feeWei": "2899666"
+    },
+    {
+      "step": "markOfferSent",
+      "txHash": "0xe15411c9a9dffb3ec215f14458f79f567a98c0ae24d8ef5a4c9642f8e9b4b48b",
+      "blockNumber": 12077672,
+      "gasUsed": "255092",
+      "gasPrice": "19",
+      "feeWei": "4846748"
+    },
+    {
+      "step": "confirmReceipt",
+      "txHash": "0xc33c5aa484067af8d169ace61f67da2d2b42a020865aa0cb505db5a565bb3625",
+      "blockNumber": 12077673,
+      "gasUsed": "55845",
+      "gasPrice": "19",
+      "feeWei": "1061055"
+    },
+    {
+      "step": "createListing(cancel)",
+      "txHash": "0x5d257de5131606c8b6983e479bf5c18cf280775283729c63867cb58f2d8d132c",
+      "blockNumber": 12077674,
+      "gasUsed": "709721",
+      "gasPrice": "19",
+      "feeWei": "13484699"
+    },
+    {
+      "step": "cancelListing",
+      "txHash": "0xe4ed65f5b6e4e99d148c33799c87061d264e3ef47449bd1de67d80bdc2ab7088",
+      "blockNumber": 12077677,
+      "gasUsed": "51429",
+      "gasPrice": "18",
+      "feeWei": "925722"
+    },
+    {
+      "step": "createListing(dispute)",
+      "txHash": "0x49a7b6103af6f55408b3799ebd0890d352474547cf06cfd1e9a7604f8f3904c2",
+      "blockNumber": 12077679,
+      "gasUsed": "709733",
+      "gasPrice": "18",
+      "feeWei": "12775194"
+    },
+    {
+      "step": "buy(dispute)",
+      "txHash": "0x0c93a756586bcce9f4780677ccc1385b8bd5902e6d790b07cbdd3e696819dcd4",
+      "blockNumber": 12077681,
+      "gasUsed": "152614",
+      "gasPrice": "18",
+      "feeWei": "2747052"
+    },
+    {
+      "step": "markOfferSent(dispute)",
+      "txHash": "0x7c03d8c09da1aedc11516383ea317739f693be4cd2fe43ec87f895319e777593",
+      "blockNumber": 12077682,
+      "gasUsed": "255092",
+      "gasPrice": "18",
+      "feeWei": "4591656"
+    },
+    {
+      "step": "openDispute",
+      "txHash": "0x7c259aa3131ac3b9e63288af01adc3fa83da520823ca0a341704aedbd7ed8b01",
+      "blockNumber": 12077683,
+      "gasUsed": "257106",
+      "gasPrice": "18",
+      "feeWei": "4627908"
+    },
+    {
+      "step": "resolveDispute(buyerWins+slash)",
+      "txHash": "0x95c65356fd18056b5a910883292f51fdf32ff1bca74c118fd16788d020ee0135",
+      "blockNumber": 12077686,
+      "gasUsed": "152662",
+      "gasPrice": "18",
+      "feeWei": "2747916"
+    }
+  ]
+}

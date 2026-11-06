@@ -23,9 +23,9 @@ export function accountErrorText(error: unknown): string {
       case "trade_url_invalid":
         return "Trade URL 无效。请使用 https://steamcommunity.com/tradeoffer/new/?partner=…&token=… 链接。";
       case "inventory_id_invalid":
-        return "库存 ID 无效。请输入 SteamID64 或 https://steamcommunity.com/profiles/<SteamID64>/inventory/ 链接。";
+        return "SteamID64 无效。请输入 SteamID64 或 https://steamcommunity.com/profiles/<SteamID64>/inventory/ 链接。";
       case "steam_account_mismatch":
-        return "Trade URL 与库存 ID 不属于同一个 Steam 账户。";
+        return "Trade URL 与 SteamID64 不属于同一个 Steam 账户。";
       case "steam_account_not_found":
         return "该 Steam 账户不存在或不属于当前钱包。";
       case "auth_required":
@@ -82,11 +82,11 @@ export function SteamAccountPicker({
     setError(null);
     setNotice(null);
     if (!tradeUrl.trim()) {
-      setError("请输入买家的 Steam Trade URL。");
+      setError("请输入 Steam 交易链接（Trade URL）。");
       return;
     }
     if (!inventoryId.trim()) {
-      setError("请输入买家的库存 ID 或 SteamID64。");
+      setError("请输入 SteamID64 或库存页面 URL。");
       return;
     }
     let parsedUrl: ReturnType<typeof parseTradeUrl>;
@@ -104,12 +104,12 @@ export function SteamAccountPicker({
       inventorySteamId = parseSteamInventoryId(inventoryId.trim());
     } catch {
       setError(
-        "库存 ID 无效。请输入 SteamID64 或 https://steamcommunity.com/profiles/<SteamID64>/inventory/ 链接。",
+        "SteamID64 无效。请输入 SteamID64 或 https://steamcommunity.com/profiles/<SteamID64>/inventory/ 链接。",
       );
       return;
     }
     if (parsedUrl.steamId64 !== inventorySteamId) {
-      setError("Trade URL 与库存 ID 不属于同一个 Steam 账户。");
+      setError("Trade URL 与 SteamID64 不属于同一个 Steam 账户。");
       return;
     }
 
@@ -157,11 +157,11 @@ export function SteamAccountPicker({
     <div className="subpanel steam-account-panel">
       <div className="steam-account-heading">
         <div>
-          <h3>{manageOnly ? "管理买家 Steam 账户" : "买家 Steam 账户"}</h3>
+          <h3>{manageOnly ? "管理我的 Steam 账户" : "收货 Steam 账户"}</h3>
           <p className="muted small">
             {manageOnly
-              ? "这些账户属于当前 MetaMask 钱包；购买时可直接选择，不需要重新粘贴 Trade URL。"
-              : "选择该钱包已保存的买家账户，付款时自动关联订单，不需要重新粘贴 Trade URL。"}
+              ? "这些账户绑定到当前 MetaMask 钱包；购买时可直接选择，不需要重新粘贴 Trade URL。"
+              : "选择当前钱包绑定的收货账户，付款时自动关联订单，不需要重新粘贴 Trade URL。"}
           </p>
         </div>
         <button
@@ -189,13 +189,13 @@ export function SteamAccountPicker({
         <p className="muted small">读取已保存的 Steam 账户…</p>
       ) : error && accounts.length === 0 ? null : accounts.length === 0 ? (
         <p className="muted small">
-          还没有保存的买家 Steam 账户。添加后可在任意 Listing 直接选择，无需重复填写 Trade URL。
+          还没有保存 Steam 账户。添加后，购买任意商品时可直接选择，无需重复填写 Trade URL。
         </p>
       ) : (
         <div
           className="steam-account-grid"
           role={manageOnly ? undefined : "radiogroup"}
-          aria-label={manageOnly ? "已保存的买家 Steam 账户" : "选择买家 Steam 账户"}
+          aria-label={manageOnly ? "已保存的 Steam 账户" : "选择收货 Steam 账户"}
         >
           {accounts.map((account) => {
             const isSelected = !manageOnly && account.id === selectedId;
@@ -265,17 +265,17 @@ export function SteamAccountPicker({
           已选择 {selected.nickname} · SteamID64 {selected.steamId64}
         </p>
       ) : !manageOnly && accounts.length > 0 ? (
-        <p className="warning-text small">请选择一个买家 Steam 账户后再付款。</p>
+        <p className="warning-text small">请选择一个收货 Steam 账户后再付款。</p>
       ) : null}
 
       {showForm ? (
         <div className="steam-account-form">
           <p className="muted small">
             添加时只把 Trade URL 发送给 Relay 一次并加密保存；之后界面只显示昵称、头像和 SteamID64。
-            完整 URL 只会在付款后向卖家的本地 helper 揭示。
+            链上 Funded 后，完整 URL 只会向该订单卖家的本地 helper 揭示；卖家 Web 不显示。
           </p>
           <label className="field">
-            <span>买家 Steam Trade URL</span>
+            <span>Steam 交易链接（Trade URL）</span>
             <input
               value={tradeUrl}
               onChange={(event) => setTradeUrl(event.target.value)}
@@ -286,7 +286,7 @@ export function SteamAccountPicker({
             />
           </label>
           <label className="field">
-            <span>库存 ID / SteamID64</span>
+            <span>SteamID64（或库存页面 URL）</span>
             <input
               value={inventoryId}
               onChange={(event) => setInventoryId(event.target.value)}
@@ -297,7 +297,7 @@ export function SteamAccountPicker({
             />
           </label>
           <p className="muted small">
-            两项必须属于同一个 Steam 账户。Relay 会读取该账户的公开昵称与头像用于展示。
+            Trade URL 的 partner 与 SteamID64 必须属于同一个 Steam 账户。Relay 会读取该账户的公开昵称与头像用于展示。
           </p>
           <button
             type="button"

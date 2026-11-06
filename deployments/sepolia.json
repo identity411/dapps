@@ -1,0 +1,33 @@
+{
+  "chainId": 11155111,
+  "network": "sepolia",
+  "address": "0x2Ffca05611801F532Afc6135b56baBEB0D7460eF",
+  "deployer": "0x82525958048270C794040D502a4A177efB32475d",
+  "arbiter": "0xfc73C38cD376D01F9B145e78fa6968F081e66D53",
+  "txHash": "0xa13facad2e103aa5df7fe0d876f73e742cb3ba4c9c9a7a037d446f52c22e04e6",
+  "blockNumber": 12077649,
+  "deploymentBlock": 12077649,
+  "deployedAt": "2026-11-06T16:09:39.758Z",
+  "config": {
+    "maxPrice": "100000000000000000",
+    "minBond": "1000000000000000",
+    "offerWindow": 600,
+    "challengeWindow": 300,
+    "deliveryWindow": 3600
+  },
+  "constructorArguments": [
+    "100000000000000000",
+    "1000000000000000",
+    600,
+    300,
+    3600,
+    "0xfc73C38cD376D01F9B145e78fa6968F081e66D53"
+  ],
+  "verifiedUrl": "https://sepolia.etherscan.io/address/0x2Ffca05611801F532Afc6135b56baBEB0D7460eF#code",
+  "verifiedAt": "2026-11-06T16:17:55.440Z",
+  "explorerUrl": "https://sepolia.etherscan.io/address/0x2Ffca05611801F532Afc6135b56baBEB0D7460eF",
+  "smoke": {
+    "file": "experiments/e1/sepolia-smoke.json",
+    "transactions": 11
+  }
+}

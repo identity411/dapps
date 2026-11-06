@@ -32,6 +32,9 @@ export function normalizeListing(raw: any): Listing {
     offerDeadline: BigInt(raw.offerDeadline),
     challengeDeadline: BigInt(raw.challengeDeadline),
     status: Number(raw.status) as ListingStatus,
+    deliveryDeadline: BigInt(raw.deliveryDeadline),
+    disputeHash: String(raw.disputeHash),
+    disputer: String(raw.disputer),
   };
 }
 
@@ -66,4 +69,9 @@ export async function readAllListings(): Promise<ListingWithId[]> {
 export async function readWithdrawable(account: string): Promise<bigint> {
   const contract = getReadContract();
   return BigInt(await contract.withdrawable(account));
+}
+
+export async function readArbiter(): Promise<string> {
+  const contract = getReadContract();
+  return String(await contract.arbiter());
 }

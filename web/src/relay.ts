@@ -13,6 +13,8 @@ export class RelayError extends Error {
 export interface RelayProfile {
   address?: string;
   steamId64?: string;
+  nickname?: string;
+  avatarUrl?: string | null;
 }
 
 export interface InventoryItem {
@@ -131,8 +133,12 @@ export async function authenticateRelay(address: string, signer: Signer): Promis
   return verified.token;
 }
 
-export function getRelayProfile(token: string): Promise<RelayProfile> {
-  return relayFetch<RelayProfile>("/profiles/me", { method: "GET", token });
+export function getRelayProfile(
+  token: string,
+  options: { includeSteam?: boolean } = {},
+): Promise<RelayProfile> {
+  const query = options.includeSteam ? "?include=steam" : "";
+  return relayFetch<RelayProfile>(`/profiles/me${query}`, { method: "GET", token });
 }
 
 export function saveRelayProfile(token: string, steamId64: string): Promise<RelayProfile> {
