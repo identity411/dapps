@@ -1,0 +1,299 @@
+{
+  "experiment": "E1",
+  "generatedAt": "2026-11-06T16:50:03.381Z",
+  "codeCommit": "6d8ffa0",
+  "environment": {
+    "local": {
+      "network": "hardhat (in-process)",
+      "chainId": 31337,
+      "contract": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "hardfork": "Osaka (Hardhat 2.29.1 default)",
+      "gasPriceWei": "1000000000",
+      "note": "Fixed 1 gwei reporting price; setup transactions excluded."
+    },
+    "sepolia": {
+      "network": "sepolia",
+      "chainId": 11155111,
+      "contract": "0x2Ffca05611801F532Afc6135b56baBEB0D7460eF",
+      "deploymentBlock": 12077649,
+      "smokeGeneratedAt": "2026-11-06T16:17:17.478Z",
+      "note": "Receipt gasUsed from the existing smoke run; no new Sepolia transactions were sent for E1. Sepolia exhibited Amsterdam-era gas rules and EIP-7708 ETH-transfer logs during this run."
+    }
+  },
+  "happyPath": {
+    "operations": [
+      "createListing",
+      "buy",
+      "markOfferSent",
+      "confirmReceipt"
+    ],
+    "localGas": 374508,
+    "sepoliaGas": 1173272,
+    "note": "withdraw is excluded because the Sepolia smoke run did not include it."
+  },
+  "assumptions": {
+    "ethUsd": 3000,
+    "gasPriceScenariosGwei": [
+      1,
+      10,
+      50
+    ],
+    "feeTiersPct": [
+      1,
+      2.5,
+      5
+    ],
+    "note": "ETH/USD and fee tiers are illustrative; test ETH has no real value."
+  },
+  "observedSepolia": {
+    "gasPriceWeiPerGas": "18-19",
+    "totalSmokeFeeWei": "64192315",
+    "totalSmokeFeeEth": "0.000000000064192315",
+    "note": "Observed during an idle Sepolia period; not representative of market gas prices."
+  },
+  "breakEven": [
+    {
+      "environment": "local-osaka",
+      "happyPathGas": 374508,
+      "feePct": 1,
+      "gasPriceGwei": 1,
+      "gasCostEth": 0.000374508,
+      "gasCostUsd": 1.123524,
+      "breakEvenItemPriceUsd": 112.35239999999999
+    },
+    {
+      "environment": "local-osaka",
+      "happyPathGas": 374508,
+      "feePct": 1,
+      "gasPriceGwei": 10,
+      "gasCostEth": 0.00374508,
+      "gasCostUsd": 11.23524,
+      "breakEvenItemPriceUsd": 1123.524
+    },
+    {
+      "environment": "local-osaka",
+      "happyPathGas": 374508,
+      "feePct": 1,
+      "gasPriceGwei": 50,
+      "gasCostEth": 0.0187254,
+      "gasCostUsd": 56.1762,
+      "breakEvenItemPriceUsd": 5617.62
+    },
+    {
+      "environment": "local-osaka",
+      "happyPathGas": 374508,
+      "feePct": 2.5,
+      "gasPriceGwei": 1,
+      "gasCostEth": 0.000374508,
+      "gasCostUsd": 1.123524,
+      "breakEvenItemPriceUsd": 44.94096
+    },
+    {
+      "environment": "local-osaka",
+      "happyPathGas": 374508,
+      "feePct": 2.5,
+      "gasPriceGwei": 10,
+      "gasCostEth": 0.00374508,
+      "gasCostUsd": 11.23524,
+      "breakEvenItemPriceUsd": 449.40959999999995
+    },
+    {
+      "environment": "local-osaka",
+      "happyPathGas": 374508,
+      "feePct": 2.5,
+      "gasPriceGwei": 50,
+      "gasCostEth": 0.0187254,
+      "gasCostUsd": 56.1762,
+      "breakEvenItemPriceUsd": 2247.048
+    },
+    {
+      "environment": "local-osaka",
+      "happyPathGas": 374508,
+      "feePct": 5,
+      "gasPriceGwei": 1,
+      "gasCostEth": 0.000374508,
+      "gasCostUsd": 1.123524,
+      "breakEvenItemPriceUsd": 22.47048
+    },
+    {
+      "environment": "local-osaka",
+      "happyPathGas": 374508,
+      "feePct": 5,
+      "gasPriceGwei": 10,
+      "gasCostEth": 0.00374508,
+      "gasCostUsd": 11.23524,
+      "breakEvenItemPriceUsd": 224.70479999999998
+    },
+    {
+      "environment": "local-osaka",
+      "happyPathGas": 374508,
+      "feePct": 5,
+      "gasPriceGwei": 50,
+      "gasCostEth": 0.0187254,
+      "gasCostUsd": 56.1762,
+      "breakEvenItemPriceUsd": 1123.524
+    },
+    {
+      "environment": "sepolia-amsterdam",
+      "happyPathGas": 1173272,
+      "feePct": 1,
+      "gasPriceGwei": 1,
+      "gasCostEth": 0.0011732720000000002,
+      "gasCostUsd": 3.5198160000000005,
+      "breakEvenItemPriceUsd": 351.9816
+    },
+    {
+      "environment": "sepolia-amsterdam",
+      "happyPathGas": 1173272,
+      "feePct": 1,
+      "gasPriceGwei": 10,
+      "gasCostEth": 0.01173272,
+      "gasCostUsd": 35.19816,
+      "breakEvenItemPriceUsd": 3519.8160000000003
+    },
+    {
+      "environment": "sepolia-amsterdam",
+      "happyPathGas": 1173272,
+      "feePct": 1,
+      "gasPriceGwei": 50,
+      "gasCostEth": 0.0586636,
+      "gasCostUsd": 175.9908,
+      "breakEvenItemPriceUsd": 17599.08
+    },
+    {
+      "environment": "sepolia-amsterdam",
+      "happyPathGas": 1173272,
+      "feePct": 2.5,
+      "gasPriceGwei": 1,
+      "gasCostEth": 0.0011732720000000002,
+      "gasCostUsd": 3.5198160000000005,
+      "breakEvenItemPriceUsd": 140.79264
+    },
+    {
+      "environment": "sepolia-amsterdam",
+      "happyPathGas": 1173272,
+      "feePct": 2.5,
+      "gasPriceGwei": 10,
+      "gasCostEth": 0.01173272,
+      "gasCostUsd": 35.19816,
+      "breakEvenItemPriceUsd": 1407.9264
+    },
+    {
+      "environment": "sepolia-amsterdam",
+      "happyPathGas": 1173272,
+      "feePct": 2.5,
+      "gasPriceGwei": 50,
+      "gasCostEth": 0.0586636,
+      "gasCostUsd": 175.9908,
+      "breakEvenItemPriceUsd": 7039.632
+    },
+    {
+      "environment": "sepolia-amsterdam",
+      "happyPathGas": 1173272,
+      "feePct": 5,
+      "gasPriceGwei": 1,
+      "gasCostEth": 0.0011732720000000002,
+      "gasCostUsd": 3.5198160000000005,
+      "breakEvenItemPriceUsd": 70.39632
+    },
+    {
+      "environment": "sepolia-amsterdam",
+      "happyPathGas": 1173272,
+      "feePct": 5,
+      "gasPriceGwei": 10,
+      "gasCostEth": 0.01173272,
+      "gasCostUsd": 35.19816,
+      "breakEvenItemPriceUsd": 703.9632
+    },
+    {
+      "environment": "sepolia-amsterdam",
+      "happyPathGas": 1173272,
+      "feePct": 5,
+      "gasPriceGwei": 50,
+      "gasCostEth": 0.0586636,
+      "gasCostUsd": 175.9908,
+      "breakEvenItemPriceUsd": 3519.816
+    }
+  ],
+  "feeSources": [
+    {
+      "name": "Steam Community Market",
+      "sellerFeePct": 15,
+      "buyerFeePct": 0,
+      "source": "https://steamdb.com/en/markets/steam",
+      "verified": "accessed 2026-11-07",
+      "note": "5% Steam transaction fee + 10% CS2 game fee; seller pays; buyer 0%.",
+      "hypothetical": false
+    },
+    {
+      "name": "BUFF163",
+      "sellerFeePct": 1.5,
+      "buyerFeePct": 0,
+      "source": "https://buff.163.com/news/87397",
+      "verified": "official announcement, accessed 2026-11-07",
+      "note": "Official announcement: seller fee cut from 2.5% to 1.5% (effective 4-14); withdrawal fee 1%. Third-party trackers still list 2.5-3%.",
+      "hypothetical": false
+    },
+    {
+      "name": "YouPin898",
+      "sellerFeePct": 1,
+      "buyerFeePct": 0,
+      "source": "https://steamdb.com/en/markets/youpin",
+      "verified": "SteamDB last verified 2026-07-01",
+      "note": "Seller 1%, buyer 0%.",
+      "hypothetical": false
+    },
+    {
+      "name": "Assumed tier 1%",
+      "sellerFeePct": 1,
+      "buyerFeePct": 0,
+      "source": "analysis assumption",
+      "verified": "n/a",
+      "note": "Hypothetical platform fee used for sensitivity, not a competitor claim.",
+      "hypothetical": true
+    },
+    {
+      "name": "Assumed tier 2.5%",
+      "sellerFeePct": 2.5,
+      "buyerFeePct": 0,
+      "source": "analysis assumption",
+      "verified": "n/a",
+      "note": "Hypothetical platform fee used for sensitivity, not a competitor claim.",
+      "hypothetical": true
+    },
+    {
+      "name": "Assumed tier 5%",
+      "sellerFeePct": 5,
+      "buyerFeePct": 0,
+      "source": "analysis assumption",
+      "verified": "n/a",
+      "note": "Hypothetical platform fee used for sensitivity, not a competitor claim.",
+      "hypothetical": true
+    }
+  ],
+  "gasRuleSources": [
+    {
+      "name": "Ethereum Foundation — EIP-8037 / EIP-8038 (state gas repricing)",
+      "url": "https://blog.ethereum.org/2026/11/06/glamsterdam-8037-8038",
+      "note": "New state slot ~20,000 -> ~97,920 gas; state access repriced."
+    },
+    {
+      "name": "Hardhat — Amsterdam hardfork support",
+      "url": "https://hardhat.org/docs/reference/amsterdam-support",
+      "note": "Amsterdam is opt-in; Osaka is the default/latest stable hardfork on the docs page."
+    },
+    {
+      "name": "EIP-7708 — ETH transfers emit a log",
+      "url": "https://eips.sh/eip/7708",
+      "note": "Protocol Transfer log from the system address 0xffff…fffe for value transfers."
+    }
+  ],
+  "caveats": [
+    "Local Hardhat defaults to Osaka; Sepolia exhibited Amsterdam-era gas rules (EIP-8037 state creation repricing, EIP-7708 ETH transfer logs). Values are reported separately and must not be mixed.",
+    "Sepolia gas used in this experiment comes from the 2026-11-06 smoke run; no new transactions were sent.",
+    "The Sepolia smoke run did not include claimAccepted, finalizeClaim, expireOrder or withdraw.",
+    "The observed Sepolia gas price (18-19 wei) is an idle-testnet artifact; break-even uses 1, 10 and 50 gwei scenarios.",
+    "Platform fee tiers 1% / 2.5% / 5% are hypothetical sensitivity inputs; competitor rates are sourced separately.",
+    "Test ETH has no real value; USD figures are for economic illustration only."
+  ]
+}

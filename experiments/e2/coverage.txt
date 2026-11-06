@@ -1,0 +1,95 @@
+# SkinPact E2 — Solidity coverage
+# Date: 2026-11-07
+# Code commit: 6d8ffa0 (feat(stage2))
+# Tool: Hardhat 2.29.1 + solidity-coverage (hardhat-toolbox)
+# Command: cd contracts && npx hardhat coverage
+# Result: SkinPactMarket.sol = 100% statements, 87.5% branch, 100% functions, 100% lines
+# Tests: 36 passing
+
+
+Version
+=======
+> solidity-coverage: v0.8.17
+
+Instrumenting for coverage...
+=============================
+
+> SkinPactMarket.sol
+
+Compilation:
+============
+
+Generating typings for: 3 artifacts in dir: typechain-types for target: ethers-v6
+Successfully generated 16 typings!
+Compiled 3 Solidity files successfully (evm target: paris).
+
+Network Info
+============
+> HardhatEVM: v2.29.1
+> network:    hardhat
+
+
+
+  SkinPactMarket (S1 + S2-mini)
+    constructor
+      ✔ exposes the delivery window and immutable arbiter
+      ✔ rejects a zero delivery window or arbiter
+    createListing
+      ✔ locks the bond and computes the quoted bond
+      ✔ rejects invalid price, item hash and bond
+      ✔ rejects a duplicate active item hash
+      ✔ allows relisting after a refund frees the item hash
+    buy
+      ✔ requires exact price and records the buyer/deadline
+      ✔ cannot buy twice or buy a non-active listing
+      ✔ rejects unknown listing ids
+    markOfferSent
+      ✔ does not release escrow and records the declaration
+      ✔ enforces seller, state, hash and deadline
+      ✔ blocks reusing an offer hash across listings
+    confirmReceipt
+      ✔ pays price + bond on the buyer fast path and supports Funded without mark
+      ✔ enforces buyer, valid state and no double settlement
+      ✔ also works from OfferSent and ClaimPending
+      ✔ cannot confirm while a dispute is open
+    claimAccepted / finalizeClaim
+      ✔ records evidence, starts a challenge and finalizes only after it
+      ✔ requires OfferSent and cannot claim twice
+      ✔ rejects finalize before ClaimPending and after settlement
+    expireOrder
+      ✔ refunds buyer price and seller bond after the offer deadline
+      ✔ cannot expire once an offer has been marked
+    cancelListing
+      ✔ refunds the bond, frees the item hash and allows relisting
+      ✔ cannot cancel a funded listing
+    openDispute
+      ✔ lets buyer or seller dispute from OfferSent before the delivery deadline
+      ✔ allows anyone to escalate after the delivery deadline
+      ✔ rejects zero hashes, wrong states and double disputes
+      ✔ lets only the buyer dispute from ClaimPending before the challenge deadline
+      ✔ rejects a ClaimPending dispute after the challenge deadline
+    resolveDispute
+      ✔ only the arbiter can resolve, only in Disputed, without contradictory flags
+      ✔ pays price + bond to the seller when the seller wins
+      ✔ refunds the buyer and returns the bond when the buyer wins without slashing
+      ✔ awards the seller bond to the buyer when slashing
+      ✔ cannot finalize a claim after the buyer disputes it
+    accounting invariants
+      ✔ keeps balance = live escrow + pull-payment credits across mixed states (45ms)
+      ✔ keeps balance = escrow + credits with Cancelled and Disputed states
+    withdraw
+      ✔ rejects an empty balance and allows only the credited account
+
+
+  36 passing (513ms)
+
+---------------------|----------|----------|----------|----------|----------------|
+File                 |  % Stmts | % Branch |  % Funcs |  % Lines |Uncovered Lines |
+---------------------|----------|----------|----------|----------|----------------|
+ contracts/          |      100 |     87.5 |      100 |      100 |                |
+  SkinPactMarket.sol |      100 |     87.5 |      100 |      100 |                |
+---------------------|----------|----------|----------|----------|----------------|
+All files            |      100 |     87.5 |      100 |      100 |                |
+---------------------|----------|----------|----------|----------|----------------|
+
+> Istanbul reports written to ./coverage/ and ./coverage.json

@@ -28,6 +28,8 @@
     "test": "npm run test -w @skinpact/shared && npm run test -w @skinpact/contracts && npm run test -w @skinpact/relay && npm run test -w @skinpact/helper",
     "build": "npm run build -w @skinpact/web",
     "e2e:local": "npm run compile && tsx scripts/e2e-local.ts",
+    "e1:gas": "npm run e1:gas -w @skinpact/contracts",
+    "e1:report": "tsx scripts/e1-report.ts",
     "typecheck": "npm run typecheck -w @skinpact/shared && npm run typecheck -w @skinpact/relay && npm run typecheck -w @skinpact/helper && npm run typecheck -w @skinpact/web && tsc -p scripts/tsconfig.json"
   },
   "repository": {

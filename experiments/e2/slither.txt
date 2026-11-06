@@ -1,0 +1,34 @@
+# SkinPact E2 — Slither static analysis
+# Date: 2026-11-07
+# Code commit: 6d8ffa0 (feat(stage2))
+# Slither: 0.11.6
+# solc: 0.8.24+commit.e11b9ed9 (Hardhat cache)
+# Command: slither contracts/SkinPactMarket.sol --solc <hardhat-solc> --solc-remaps "@openzeppelin/=<repo>/node_modules/@openzeppelin/" --filter-paths "node_modules"
+# Result: 0 High/Medium findings; 5 informational instances (4 timestamp comparisons, 1 low-level call)
+# See findings.md F-14 and F-15 for triage.
+
+Multiple frameworks detected: solc, Solc-json. Using solc (highest priority). Use --compile-force-framework to override.
+'/Users/william/Library/Caches/hardhat-nodejs/compilers-v2/macosx-amd64/solc-macosx-amd64-v0.8.24+commit.e11b9ed9 --version' running
+'/Users/william/Library/Caches/hardhat-nodejs/compilers-v2/macosx-amd64/solc-macosx-amd64-v0.8.24+commit.e11b9ed9 @openzeppelin/=/Users/william/dapps/node_modules/@openzeppelin/ contracts/SkinPactMarket.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths /Users/william/dapps/node_modules,/Users/william/dapps/contracts' running
+INFO:Detectors:
+Detector: timestamp
+SkinPactMarket.markOfferSent(uint256,bytes32) (contracts/SkinPactMarket.sol#179-193) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= listing.offerDeadline (contracts/SkinPactMarket.sol#183)
+SkinPactMarket.finalizeClaim(uint256) (contracts/SkinPactMarket.sol#226-233) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < listing.challengeDeadline (contracts/SkinPactMarket.sol#229)
+SkinPactMarket.expireOrder(uint256) (contracts/SkinPactMarket.sol#236-247) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < listing.offerDeadline (contracts/SkinPactMarket.sol#239)
+SkinPactMarket.openDispute(uint256,bytes32) (contracts/SkinPactMarket.sol#266-287) uses timestamp for comparisons
+	Dangerous comparisons:
+	- ! isParty && block.timestamp < listing.deliveryDeadline (contracts/SkinPactMarket.sol#272)
+	- block.timestamp >= listing.challengeDeadline (contracts/SkinPactMarket.sol#277)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in SkinPactMarket.withdraw() (contracts/SkinPactMarket.sol#318-327):
+	- (ok,None) = address(msg.sender).call{value: amount}() (contracts/SkinPactMarket.sol#323)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Slither:contracts/SkinPactMarket.sol analyzed (3 contracts with 102 detectors), 5 result(s) found

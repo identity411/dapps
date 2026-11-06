@@ -1,8 +1,8 @@
 # Course Delivery & Report Spec · SkinPact 期末作业
 
-**状态**：执行中（代码主体完成，交付物未完成）
-**版本**：v0.1
-**日期**：2026-11-06
+**状态**：执行中（E1/E2 已完成；E3 / 报告 / Slides / 视频 / QA 待做）
+**版本**：v0.2
+**日期**：2026-11-07
 **课程截止**：2026-11-08 23:59
 **目标提交**：2026-11-07 21:00（留 11-08 作缓冲）
 **上游**：[MVP Spec §2 / §6 / §8](./2026-11-01-dapp-project-mvp-spec.md)、[S2-mini Spec](./2026-11-06-stage-2-minimal-refund-dispute-spec.md)、[Sepolia Spec](./2026-11-06-sepolia-deployment-spec.md)
@@ -18,14 +18,15 @@
 | Web | ✅ 构建通过 | cancel/dispute/resolve UI 已接入；**手动走查未做** |
 | 本地 E2E | ✅ | P1–P8，99 checks；Steam 为明确 mock |
 | Sepolia | ✅ | 合约 `0x2Ffca…460eF`，block 12077649；[Etherscan verified](https://sepolia.etherscan.io/address/0x2Ffca05611801F532Afc6135b56baBEB0D7460eF#code)；11 笔 smoke tx；Web/Relay 连 Sepolia 待走查 |
-| E1 Gas/费率 | ⚠️ 部分 | `experiments/e1/sepolia-smoke.json` 已有 11 笔 Sepolia tx/gas；全函数 gas、费率对比和图未做 |
-| E2 安全实验 | ⚠️ | 有测试和 E2E，但未整理成报告级 findings/trust table/Slither |
+| E1 Gas/费率 | ✅ 完成（11-07） | 本地 11 操作 + Sepolia 7 操作；`experiments/e1/` 有 CSV、JSON、费率表、gas 柱状图、break-even 图；Sepolia 缺 `claimAccepted`/`finalizeClaim`/`expireOrder`/`withdraw`（未发新 tx，已在 README 标注） |
+| E2 安全实验 | ✅ 完成（11-07） | `experiments/e2/`：threat-model、17 findings、trust-table、Slither（0 High/Medium）、coverage（100% stmts/funcs/lines，87.5% branch） |
 | E3 可用性 | ❌ | 未做；可降级 heuristic |
-| 报告 / Slides / 视频 | ❌ | 均未开始 |
+| 报告 / Slides / 视频 | ❌ | 均未开始；E1/E2 数据已可直接引用 |
 | Demo | ⚠️ | 本地 E2E 通过，浏览器 Demo 未彩排 |
 | 贡献表 / 提交 QA | ❌ | 未整理 |
+| 公开仓库同步 | ⚠️ | 仓库为 public，但本地 `docs/skinpact-spec` 比 origin 领先 1 commit（`6d8ffa0`），且 E1/E2 新文件尚未提交/推送 |
 
-**结论**：Codebase 35% 已基本保住；Sepolia 硬性门槛已完成（部署 + verified + 11 笔 smoke）；**Experiment 35% 仍是最大缺口**；报告/视频/Slides 是剩余工作量主体。
+**结论**：Codebase 35% 与 Experiment 的 E1/E2 部分已保住；**剩余主体是 E3 + 报告 / Slides / 视频 / Demo 彩排 / QA**。两个卡点必须处理：① Sepolia smoke 运行时表现出 Amsterdam 时代 gas 规则，而本地 Hardhat 默认 Osaka，gas 数字相差 3–4 倍，报告必须并列呈现、不可混用；② 公开仓库尚未包含 stage2 与 E1/E2 产物，提交前需 commit + push。
 
 ---
 
@@ -36,11 +37,13 @@
 | Sepolia + verified 地址 | `deployments/sepolia.json`、[Etherscan](https://sepolia.etherscan.io/address/0x2Ffca05611801F532Afc6135b56baBEB0D7460eF#code) | R2/R3 | ✅ |
 | 至少一次有意义的链上操作 | Sepolia smoke 11 tx（含 create/buy/mark/confirm、cancel、dispute） | R3 | ✅ |
 | Solidity + ethers.js + MetaMask | 合约、Web、Demo | R2/R3 | ✅ |
+| E1 gas / 费率实验 | `experiments/e1/`：local 11 ops、Sepolia 7 ops、CSV、两张图、break-even、费率来源 | R2/R4 | ✅ 11-07 |
+| E2 安全实验 | `experiments/e2/`：threat model、17 findings、trust table、Slither、coverage | R2 | ✅ 11-07 |
 | 4–5 人 + 贡献表 | 报告 appendix + README | R1 | ❌ |
 | 英文报告 PDF | `{N}-SkinPact.pdf` | R1 | ❌ |
 | 英文 Slides | `{N}-SkinPact.pptx` | R5 | ❌ |
 | 英文视频 | `{N}-SkinPact-video.txt`（unlisted + 备份） | R5 | ❌ |
-| Public repo + README | GitHub 仓库、README | R1/R3 | ⚠️ 需确认 public |
+| Public repo + README | GitHub 仓库、README | R1/R3 | ✅ public；⚠️ 本地领先 1 commit，需 push |
 | 命名规范 | `{N}-SkinPact.pdf/.pptx/-video.txt` | R1 | ❌ |
 | testnet-only 声明 | 报告 / README / 视频口播 | R1/R5 | ❌ |
 | 截止时间 | 11-07 21:00 提交，11-08 23:59 截止 | 全队 | — |
@@ -54,8 +57,8 @@
 | WP | 内容 | 产出 | 负责人 | 截止 |
 |---|---|---|---|---|
 | WP0 | Sepolia 部署 + verify + smoke ✅ | 地址 `0x2Ffca…460eF`、tx、verify URL、11 笔 smoke | R2/R3 | 11-06 完成 |
-| WP1 | E1 gas / 费率实验 | CSV、图表、盈亏平衡表 | R4/R2 | 11-07 |
-| WP2 | E2 安全实验 | threat model、findings、trust table、Slither | R2 | 11-07 |
+| WP1 | E1 gas / 费率实验 ✅ | `experiments/e1/`：local-gas.csv/json、sepolia-gas.csv、fee-comparison.csv、summary.json、两张图（SVG+PNG）、README | R4/R2 | ✅ 11-07 |
+| WP2 | E2 安全实验 ✅ | `experiments/e2/`：threat-model.md、findings.md、trust-table.md、slither.txt、coverage.txt、README | R2 | ✅ 11-07 |
 | WP3 | E3 可用性实验（或 heuristic） | 漏斗图、表格、改进项 | R4/R1 | 11-07 |
 | WP4 | 报告 | `{N}-SkinPact.pdf` | R1 | 11-07 |
 | WP5 | Slides + 视频 | `.pptx` + `-video.txt` | R5 | 11-07 |
@@ -72,9 +75,12 @@
 
 ```text
 experiments/
-  e1/  local-gas.csv, sepolia-gas.csv, fee-breakeven.png, README.md
-  e2/  threat-model.md, findings.md, trust-table.md, slither.txt, coverage.txt
-  e3/  protocol.md, consent.md, results.csv, funnel.png, summary.md
+  e1/  local-gas.csv, local-gas.json, sepolia-gas.csv, sepolia-smoke.json,
+       fee-comparison.csv, summary.json,
+       gas-by-operation.svg/.png, fee-breakeven.svg/.png, README.md
+  e2/  threat-model.md, findings.md, trust-table.md,
+       slither.txt, coverage.txt, README.md
+  e3/  (not started) protocol.md, consent.md, results.csv, funnel.png, summary.md
 ```
 
 ### 4.1 E1 — Gas / 费率 / 盈亏平衡
@@ -95,6 +101,16 @@ experiments/
 
 **产出**：CSV、gas 柱状图、盈亏平衡图、费用对比表、结论（低单价可能不经济，指向 L2/稳定币）。
 
+**结果（2026-11-07，commit `6d8ffa0`）**：
+
+- 本地 Hardhat（Osaka，固定 1 gwei 报告价）覆盖全部 11 个操作；Sepolia 覆盖 7 个操作（`createListing`、`buy`、`markOfferSent`、`confirmReceipt`、`cancelListing`、`openDispute`、`resolveDispute`）。Sepolia 未测 `claimAccepted`、`finalizeClaim`、`expireOrder`、`withdraw`；**没有为 E1 发新的 Sepolia 交易**。
+- Happy path（create + buy + mark + confirm）：本地 **374,508 gas**；Sepolia **1,173,272 gas**。
+- 10 gwei、$3,000/ETH 假设下：Sepolia happy path gas ≈ **$35.20**；盈亏平衡价 1% = **$3,520**、2.5% = **$1,408**、5% = **$704**。结论：低单价时 L1 gas 高于平台费，0 平台费 ≠ 0 成本。
+- Sepolia 实测 effective gas price 为 18–19 wei（空闲测试网伪影），11 笔 smoke 总费用 `64,192,315 wei`；经济结论使用 1/10/50 gwei 情景，不使用该观测值。
+- **关键卡点**：Sepolia smoke 运行时表现出 Amsterdam 时代 gas 规则（EIP-8037/8038 状态创建/访问涨价；值转移额外产生 EIP-7708 `Transfer` 日志，emitter 为 `0xffff…fffe`），本地 Hardhat 2.29.1 默认 Osaka。同一操作 Sepolia gas 可达本地的 3–4 倍（如 `createListing` 709,721 vs 175,001）。报告必须并列呈现，不能混算。
+- 费率来源：Steam 15%（5% Steam + 10% CS2，SteamDB，accessed 2026-11-07）；BUFF 1.5%（官方公告，2.5% 下调，accessed 2026-11-07；第三方仍显示 2.5–3%）；YouPin 1%（SteamDB，last verified 2026-07-01）。1%/2.5%/5% 仅作为敏感性假设，不冒充竞品费率。
+- 入口：`npm run e1:gas`、`npm run e1:report`；详见 [`experiments/e1/README.md`](../experiments/e1/README.md)。
+
 ### 4.2 E2 — 安全 / 信任边界
 
 **问题**：合约/helper/Relay 能否抵抗越权、重入、状态绕过、假 claim、URL 泄露？残余信任点是什么？
@@ -113,6 +129,15 @@ experiments/
 - 工具：`npm test`、`e2e:local`、invariant、Slither、coverage。
 - 产出：findings（含严重度/复现/修复）、trust table、残余风险。
 
+**结果（2026-11-07，commit `6d8ffa0`）**：
+
+- 产出：`experiments/e2/threat-model.md`（资产、角色、信任边界、42 个威胁场景）、`findings.md`（17 条 findings + 已验证性质 + 修复建议）、`trust-table.md`（逐组件信任假设与残余风险）、`slither.txt`、`coverage.txt`、`README.md`。
+- 测试证据：合约 36、shared 1、relay 18、helper 12 全部通过；本地 E2E P1–P8 **99 checks** 通过（Steam 明确 mock）。
+- Slither 0.11.6（solc 0.8.24）：**0 High/Medium**；5 条 informational（4 处时间窗比较 + 1 处 pull-payment 低级调用），已逐条 triage。
+- Coverage：**100% statements / 100% functions / 100% lines / 87.5% branch**。
+- 结论：未发现可利用的越权、重入、双结算或 URL 访问控制漏洞。主要风险是信任边界而非代码漏洞：**F-01 Steam 交付不可链上验证**、**F-02 arbiter 单点且不可更换**、**F-03 Trade URL 是 bearer secret 且 Relay 可解密**。另有 F-04 buyer dispute 冻结、F-05 seller mark-without-offer、F-06 buyer-first Accept race 等残余风险，均已在报告中披露。
+- **卡点/限制**：Slither 需要 Hardhat 缓存 solc + 绝对 OpenZeppelin remap，命令已记录在 `findings.md` §10；Slither 是静态分析，不是 formal verification 或审计；E2E 的 Steam 传输是 mock，不能当作真实交付证据。
+
 ### 4.3 E3 — 可用性（可降级）
 
 **首选**：5–8 名同学/玩家，mock Steam + 预充值钱包，完成：
@@ -127,6 +152,15 @@ experiments/
 **降级**（时间不够）：2–3 名评审按 Nielsen 启发式走查，明确标注为 heuristic evaluation，不冒充用户研究。
 
 **产出**：漏斗图、结果表、改进项、限制说明。
+
+### 4.4 执行卡点（2026-11-07）
+
+- **Gas 规则不可比**：Sepolia 在本次 smoke 中表现出 Amsterdam 时代规则（EIP-8037/8038、EIP-7708），本地 Hardhat 2.29.1 默认 Osaka；同一操作相差 3–4 倍。报告必须并列呈现，禁止把两套 gas 相加或互换。
+- **E1 Sepolia 数据缺 4 个操作**：`claimAccepted`、`finalizeClaim`、`expireOrder`、`withdraw` 只有本地数据；按“优先本地、必要时 Sepolia”的要求，未为 E1 发新 tx。报告需注明。
+- **E2 工具链**：Slither 需要 Hardhat 缓存 solc + 绝对 OpenZeppelin remap；命令已写入 `experiments/e2/findings.md` §10。Slither 不是审计/形式化验证。
+- **Steam 证据边界**：E2E 与 E2 的 Steam 传输为 mock；真实交付是手动 exit check，报告/视频必须一致标注。
+- **E3 未开始**：距离 21:00 目标提交时间有限，建议直接采用 2–3 人 Nielsen heuristic 降级方案并明确标注。
+- **公开仓库未同步**：本地领先 origin 1 个 commit（`6d8ffa0`），E1/E2 新文件尚未提交/推送；提交前必须 commit + push，否则公开仓库无法支撑报告引用。
 
 ---
 
@@ -232,13 +266,16 @@ experiments/
 ## 9. QA 与提交清单
 
 ```text
-[ ] Sepolia verified 地址 + 至少一笔 tx
+[x] Sepolia verified 地址 + 至少一笔 tx
+[x] E1 数据与结论：experiments/e1/（local 11 ops + Sepolia 7 ops、图、break-even）
+[x] E2 数据与结论：experiments/e2/（threat model、findings、trust table、Slither、coverage）
 [ ] 报告 PDF：{N}-SkinPact.pdf
 [ ] Slides：{N}-SkinPact.pptx
 [ ] 视频链接：{N}-SkinPact-video.txt（unlisted + 备份）
 [ ] 贡献表（报告 + README）
 [ ] public repo + README（地址、运行、限制、mock 声明）
-[ ] clean clone：npm install / npm test / npm run build 通过
+[ ] **git push stage2 + E1/E2**；GitHub 页面确认 deployments/ 与 experiments/ 可见
+[ ] clean clone：npm install / npm test / npm run typecheck / npm run build 通过
 [ ] npm run e2e:local 通过
 [ ] 无 secrets：git grep 私钥/token；.env 未提交
 [ ] 命名正确；所有链接 incognito 可访问
@@ -261,13 +298,14 @@ npm run build
 
 ## 10. 时间表
 
-| 日期 | 任务 |
-|---|---|
-| **11-06（今天）** | Sepolia 配置/部署/verify；Web/Relay/helper 切换；最小 smoke；手动 UI 走查；开始 E1 本地数据；确认 repo public/贡献表 |
-| **11-07 上午** | E1 Sepolia 数据 + 图表；E2 findings/trust table/Slither；E3（或 heuristic） |
-| **11-07 下午** | 报告主体（先写 design/experiments/limitations）；Slides |
-| **11-07 傍晚** | 彩排 + 录视频；QA；**21:00 提交** |
-| **11-08** | 只处理提交平台故障；不新增功能 |
+| 日期 | 任务 | 实际 |
+|---|---|---|
+| **11-06** | Sepolia 配置/部署/verify；Web/Relay/helper 切换；最小 smoke；手动 UI 走查；确认 repo public/贡献表 | ✅ Sepolia 部署+verify+11 tx；UI 走查未做 |
+| **11-07 凌晨（实际）** | E1 本地 11 操作 gas + Sepolia CSV + 费率/盈亏平衡/图；E2 threat model/findings/trust table/Slither/coverage | ✅ 完成（E1/E2） |
+| **11-07 上午** | E3（建议直接 heuristic）；报告主体（design/experiments/limitations） | ⬜ |
+| **11-07 下午** | 完成报告 + Slides；贡献表；README 状态 | ⬜ |
+| **11-07 傍晚** | Demo 彩排 + 录视频；clean clone；QA；**21:00 提交** | ⬜ |
+| **11-08** | 只处理提交平台故障；不新增功能 | — |
 
 ---
 
@@ -296,6 +334,9 @@ npm run build
 | 视频泄露 PII | 隐私风险 | 遮挡；测试账号；录前检查 |
 | 报告夸大 0 费率 | Coherence 扣分 | E1 诚实呈现 gas；结论指向 L2/稳定币 |
 | 实验不可复现 | Experiment 扣分 | 提交脚本/参数/commit hash/日期 |
+| Sepolia 与本地 gas 规则不同（Amsterdam vs Osaka） | 混用导致 E1 数据失真、报告被质疑 | 报告中并列呈现；经济结论用 Sepolia 保守值；明确 EIP-8037/8038/7708；不混算 |
+| 公开仓库未推送 stage2/E1/E2 | 公开证据链断裂，硬性要求风险 | 提交前 `git push`；用 GitHub 页面确认 `deployments/` 与 `experiments/` 可见 |
+| E3 时间不足 | Experiment 缺一块 | 直接降级 2–3 人 heuristic；明确不冒充用户研究 |
 
 ---
 
@@ -309,6 +350,11 @@ npm run build
 - `InEscrow(11)` 不是最终交付，不能自动 claim。
 - 挑战窗口通知依赖 UI 轮询，买家可能错过。
 - 0 平台费不等于 0 成本；L1 gas 可能使低单价交易不经济。
+- **E1 环境差异**：Sepolia 在本次 smoke 中表现出 Amsterdam 时代 gas 规则（EIP-8037/8038；EIP-7708 值转移日志），本地 Hardhat 为 Osaka；同一操作 gas 相差 3–4 倍，报告必须并列呈现，不能混用。
+- **E1 数据缺口**：Sepolia smoke 未包含 `claimAccepted`、`finalizeClaim`、`expireOrder`、`withdraw`；这 4 项只有本地数据。
+- **E1 经济假设**：ETH/USD 为假设值（默认 $3,000）；gas price 采用 1/10/50 gwei 情景；Sepolia 实测 18–19 wei 是空闲测试网伪影，不代表市场价。
+- **E2 工具限制**：Slither 是静态分析，coverage 衡量执行覆盖率而非正确性；未做形式化验证或第三方审计；E2E 的 Steam 传输是 mock。
+- **E3 若走 heuristic**：必须明确标注为 heuristic evaluation，样本量与主观偏差写入 limitation，不冒充用户研究。
 - Test ETH 无真实价值；Steam 饰品仍是链下资产；本项目仅课程 demo。
 - 真实 Steam 与 mock 的标注必须全片/全文一致。
 
@@ -317,9 +363,13 @@ npm run build
 ## 14. 验收标准
 
 - [ ] 所有课程硬性要求有证据（Sepolia、链上操作、public repo、英文交付物）
-- [ ] E1–E3 数据/图表/结论齐全，报告实验占比达标
+- [x] E1 数据/图表/结论齐全：本地 11 操作 + Sepolia 7 操作、CSV、两张图、费率来源、break-even（`experiments/e1/`）
+- [x] E2 数据/结论齐全：threat model、17 findings、trust table、Slither、coverage（`experiments/e2/`）
+- [ ] E3 数据/图表/结论齐全（或明确标注的 heuristic）
+- [ ] 报告实验占比达标（E1/E2 素材已就绪，E3 补齐后即可写）
 - [ ] 报告/Slides/视频英文、命名正确、链接可访问
 - [ ] Demo 两次彩排 + backup
 - [ ] 贡献表、testnet-only 声明、mock 标注
 - [ ] clean clone + 无 secrets
+- [ ] **公开仓库包含 stage2 + E1/E2 产物**（当前本地领先 1 commit，需 push）
 - [ ] 11-07 21:00 前提交，保存确认

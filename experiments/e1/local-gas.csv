@@ -1,0 +1,12 @@
+operation,scenario,gasUsed,gasPriceWei,feeWei,txHash,notes
+createListing,"seller creates a listing at 0.01 test ETH",175001,1000000000,175001000000000,0x241a407d52c88f336b3c1799d8902e09af8f6157d54a01793ab9505ab254a90d,"bond = max(price/10, minBond) = 0.001 test ETH"
+buy,"buyer funds an Active listing",57394,1000000000,57394000000000,0x8711fc17a26c807fae90942aee0f2424be25fc2bca44e9a2673a1ea37ac6c85f,"price = 0.01 test ETH"
+markOfferSent,"seller marks a funded order as offer-sent",77952,1000000000,77952000000000,0xf0404a9a3a69bb81e0181d467fdd157c65f964f025bb3d3f9ed8d3a07e35aace,"does not release escrow; stores offer hash and delivery deadline"
+confirmReceipt,"buyer confirms receipt from OfferSent",64161,1000000000,64161000000000,0xb586b958c01f006d9612040181e1f93bcce6fc81da8a729372261c3301963b04,"credits price + bond to the seller's pull-payment balance"
+claimAccepted,"seller claims acceptance after OfferSent",55698,1000000000,55698000000000,0xafc74b89fb79f45a9ec7d41f7067ce37d8fc6893120cd5130efbe59a9796ef67,"starts the challenge window; no payout yet"
+finalizeClaim,"outsider finalizes after the challenge window",44549,1000000000,44549000000000,0x024575c15bb0c579660b1d81710260207c990b19481208904f8e8dd9ad002ccd,"permissionless; credits price + bond to the seller"
+expireOrder,"outsider expires a Funded order after the offer window",68820,1000000000,68820000000000,0x348ccd38ed4a269c1781d4cd11d558256efc55c8076202de863ca45d2f899389,"refunds the buyer price and seller bond as pull payments"
+cancelListing,"seller cancels an Active listing",42645,1000000000,42645000000000,0x72292bbf8827cadf454d695c810b65f55ffd2e21e268e15e71e574c9fbc5c830,"refunds the bond as a pull payment; frees the item hash"
+openDispute,"buyer disputes from OfferSent",79966,1000000000,79966000000000,0x3b86fa3351307651f177585ec0922949dd567b3dc3eb35764134ddb0dd880de5,"stores only a dispute hash; funds stay in escrow"
+resolveDispute,"arbiter grants buyer win with bond slashed to the buyer",45958,1000000000,45958000000000,0x6a10a4ddf382d0c8d578a1901256485555794020d58a70dd61e0d0e0808d5dc1,"buyer receives price + bond as pull payments"
+withdraw,"seller withdraws a credited bond",32399,1000000000,32399000000000,0xfce690ed979f87a0f286a345e437b4e8b0b9aeb8605d957b11be45d5cad82a55,"pull payment; ReentrancyGuard + zeroed credit before the call"

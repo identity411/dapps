@@ -1,0 +1,123 @@
+{
+  "experiment": "E1",
+  "network": "hardhat (in-process)",
+  "chainId": 31337,
+  "contract": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "date": "2026-11-06T16:37:06.609Z",
+  "codeCommit": "6d8ffa0",
+  "node": "v22.23.2",
+  "gasPriceWei": "1000000000",
+  "config": {
+    "maxPrice": "100000000000000000",
+    "minBond": "1000000000000000",
+    "offerWindow": 600,
+    "challengeWindow": 300,
+    "deliveryWindow": 3600,
+    "arbiter": "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+  },
+  "scenario": {
+    "price": "10000000000000000",
+    "bond": "1000000000000000"
+  },
+  "rows": [
+    {
+      "operation": "createListing",
+      "scenario": "seller creates a listing at 0.01 test ETH",
+      "gasUsed": "175001",
+      "gasPriceWei": "1000000000",
+      "feeWei": "175001000000000",
+      "txHash": "0x241a407d52c88f336b3c1799d8902e09af8f6157d54a01793ab9505ab254a90d",
+      "notes": "bond = max(price/10, minBond) = 0.001 test ETH"
+    },
+    {
+      "operation": "buy",
+      "scenario": "buyer funds an Active listing",
+      "gasUsed": "57394",
+      "gasPriceWei": "1000000000",
+      "feeWei": "57394000000000",
+      "txHash": "0x8711fc17a26c807fae90942aee0f2424be25fc2bca44e9a2673a1ea37ac6c85f",
+      "notes": "price = 0.01 test ETH"
+    },
+    {
+      "operation": "markOfferSent",
+      "scenario": "seller marks a funded order as offer-sent",
+      "gasUsed": "77952",
+      "gasPriceWei": "1000000000",
+      "feeWei": "77952000000000",
+      "txHash": "0xf0404a9a3a69bb81e0181d467fdd157c65f964f025bb3d3f9ed8d3a07e35aace",
+      "notes": "does not release escrow; stores offer hash and delivery deadline"
+    },
+    {
+      "operation": "confirmReceipt",
+      "scenario": "buyer confirms receipt from OfferSent",
+      "gasUsed": "64161",
+      "gasPriceWei": "1000000000",
+      "feeWei": "64161000000000",
+      "txHash": "0xb586b958c01f006d9612040181e1f93bcce6fc81da8a729372261c3301963b04",
+      "notes": "credits price + bond to the seller's pull-payment balance"
+    },
+    {
+      "operation": "claimAccepted",
+      "scenario": "seller claims acceptance after OfferSent",
+      "gasUsed": "55698",
+      "gasPriceWei": "1000000000",
+      "feeWei": "55698000000000",
+      "txHash": "0xafc74b89fb79f45a9ec7d41f7067ce37d8fc6893120cd5130efbe59a9796ef67",
+      "notes": "starts the challenge window; no payout yet"
+    },
+    {
+      "operation": "finalizeClaim",
+      "scenario": "outsider finalizes after the challenge window",
+      "gasUsed": "44549",
+      "gasPriceWei": "1000000000",
+      "feeWei": "44549000000000",
+      "txHash": "0x024575c15bb0c579660b1d81710260207c990b19481208904f8e8dd9ad002ccd",
+      "notes": "permissionless; credits price + bond to the seller"
+    },
+    {
+      "operation": "expireOrder",
+      "scenario": "outsider expires a Funded order after the offer window",
+      "gasUsed": "68820",
+      "gasPriceWei": "1000000000",
+      "feeWei": "68820000000000",
+      "txHash": "0x348ccd38ed4a269c1781d4cd11d558256efc55c8076202de863ca45d2f899389",
+      "notes": "refunds the buyer price and seller bond as pull payments"
+    },
+    {
+      "operation": "cancelListing",
+      "scenario": "seller cancels an Active listing",
+      "gasUsed": "42645",
+      "gasPriceWei": "1000000000",
+      "feeWei": "42645000000000",
+      "txHash": "0x72292bbf8827cadf454d695c810b65f55ffd2e21e268e15e71e574c9fbc5c830",
+      "notes": "refunds the bond as a pull payment; frees the item hash"
+    },
+    {
+      "operation": "openDispute",
+      "scenario": "buyer disputes from OfferSent",
+      "gasUsed": "79966",
+      "gasPriceWei": "1000000000",
+      "feeWei": "79966000000000",
+      "txHash": "0x3b86fa3351307651f177585ec0922949dd567b3dc3eb35764134ddb0dd880de5",
+      "notes": "stores only a dispute hash; funds stay in escrow"
+    },
+    {
+      "operation": "resolveDispute",
+      "scenario": "arbiter grants buyer win with bond slashed to the buyer",
+      "gasUsed": "45958",
+      "gasPriceWei": "1000000000",
+      "feeWei": "45958000000000",
+      "txHash": "0x6a10a4ddf382d0c8d578a1901256485555794020d58a70dd61e0d0e0808d5dc1",
+      "notes": "buyer receives price + bond as pull payments"
+    },
+    {
+      "operation": "withdraw",
+      "scenario": "seller withdraws a credited bond",
+      "gasUsed": "32399",
+      "gasPriceWei": "1000000000",
+      "feeWei": "32399000000000",
+      "txHash": "0xfce690ed979f87a0f286a345e437b4e8b0b9aeb8605d957b11be45d5cad82a55",
+      "notes": "pull payment; ReentrancyGuard + zeroed credit before the call"
+    }
+  ]
+}

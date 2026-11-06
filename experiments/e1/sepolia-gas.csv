@@ -1,0 +1,12 @@
+step,operation,gasUsed,gasPriceWei,feeWei,txHash,blockNumber,note
+createListing,createListing,709721,19,13484699,0x0ce7d887cfa5e1ab9a99a65af6d6721b3d78b98c3b995a3ae2d1a5e528add987,12077670,""
+buy,buy,152614,19,2899666,0xf6db613155cde61bdecd15ee6a550efc9ed20b8e30767d8d43c3e58d2191e206,12077671,""
+markOfferSent,markOfferSent,255092,19,4846748,0xe15411c9a9dffb3ec215f14458f79f567a98c0ae24d8ef5a4c9642f8e9b4b48b,12077672,""
+confirmReceipt,confirmReceipt,55845,19,1061055,0xc33c5aa484067af8d169ace61f67da2d2b42a020865aa0cb505db5a565bb3625,12077673,"buyer confirms; no withdraw in this smoke run"
+createListing(cancel),createListing,709721,19,13484699,0x5d257de5131606c8b6983e479bf5c18cf280775283729c63867cb58f2d8d132c,12077674,"setup for cancelListing"
+cancelListing,cancelListing,51429,18,925722,0xe4ed65f5b6e4e99d148c33799c87061d264e3ef47449bd1de67d80bdc2ab7088,12077677,""
+createListing(dispute),createListing,709733,18,12775194,0x49a7b6103af6f55408b3799ebd0890d352474547cf06cfd1e9a7604f8f3904c2,12077679,"setup for the dispute path"
+buy(dispute),buy,152614,18,2747052,0x0c93a756586bcce9f4780677ccc1385b8bd5902e6d790b07cbdd3e696819dcd4,12077681,"setup for the dispute path"
+markOfferSent(dispute),markOfferSent,255092,18,4591656,0x7c03d8c09da1aedc11516383ea317739f693be4cd2fe43ec87f895319e777593,12077682,"setup for the dispute path"
+openDispute,openDispute,257106,18,4627908,0x7c259aa3131ac3b9e63288af01adc3fa83da520823ca0a341704aedbd7ed8b01,12077683,"stores only a dispute hash; funds stay in escrow"
+resolveDispute(buyerWins+slash),resolveDispute,152662,18,2747916,0x95c65356fd18056b5a910883292f51fdf32ff1bca74c118fd16788d020ee0135,12077686,"arbiter: buyer wins, bond slashed to buyer"
