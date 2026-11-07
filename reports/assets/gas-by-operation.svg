@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="700" viewBox="0 0 1040 700" role="img">
+<title>SkinPact gas by operation</title>
+<desc>Grouped bars comparing local Hardhat Osaka gas with Sepolia Amsterdam receipt gas for eleven SkinPactMarket operations.</desc>
+<rect width="1040" height="700" fill="#ffffff"/>
+<text x="200" y="48" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="24" font-weight="700" fill="#111827">SkinPact gas by operation</text>
+<text x="200" y="74" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#4b5563">Local: Hardhat 2.29.1 (Osaka default), fixed 1 gwei reporting price.</text>
+<text x="200" y="92" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#4b5563">Sepolia: receipt gasUsed from the 2026-11-06 smoke run (Amsterdam gas rules).</text>
+<rect x="200" y="103" width="12" height="12" rx="2" fill="#2f6fa8"/>
+<text x="218" y="114" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#374151">Local (Osaka)</text>
+<rect x="340" y="103" width="12" height="12" rx="2" fill="#d1495b"/>
+<text x="358" y="114" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#374151">Sepolia (Amsterdam)</text>
+<line x1="200" y1="132" x2="200" y2="590" stroke="#e5e7eb" stroke-width="1"/>
+<text x="200" y="610" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280" text-anchor="middle">0</text>
+<line x1="286.25" y1="132" x2="286.25" y2="590" stroke="#e5e7eb" stroke-width="1"/>
+<text x="286.25" y="610" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280" text-anchor="middle">100k</text>
+<line x1="372.5" y1="132" x2="372.5" y2="590" stroke="#e5e7eb" stroke-width="1"/>
+<text x="372.5" y="610" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280" text-anchor="middle">200k</text>
+<line x1="458.75" y1="132" x2="458.75" y2="590" stroke="#e5e7eb" stroke-width="1"/>
+<text x="458.75" y="610" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280" text-anchor="middle">300k</text>
+<line x1="545" y1="132" x2="545" y2="590" stroke="#e5e7eb" stroke-width="1"/>
+<text x="545" y="610" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280" text-anchor="middle">400k</text>
+<line x1="631.25" y1="132" x2="631.25" y2="590" stroke="#e5e7eb" stroke-width="1"/>
+<text x="631.25" y="610" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280" text-anchor="middle">500k</text>
+<line x1="717.5" y1="132" x2="717.5" y2="590" stroke="#e5e7eb" stroke-width="1"/>
+<text x="717.5" y="610" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280" text-anchor="middle">600k</text>
+<line x1="803.75" y1="132" x2="803.75" y2="590" stroke="#e5e7eb" stroke-width="1"/>
+<text x="803.75" y="610" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280" text-anchor="middle">700k</text>
+<line x1="890" y1="132" x2="890" y2="590" stroke="#e5e7eb" stroke-width="1"/>
+<text x="890" y="610" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280" text-anchor="middle">800k</text>
+<text x="545" y="682" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#374151" text-anchor="middle">gas used (gas units)</text>
+<text x="188" y="156.8181818181818" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">createListing</text>
+<rect x="200" y="138.3272727272727" width="150.9" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="356.9" y="148.8181818181818" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">175,001</text>
+<rect x="200" y="154.8181818181818" width="612.1" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="818.1" y="167.3090909090909" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">709,721</text>
+<text x="188" y="198.45454545454544" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">buy</text>
+<rect x="200" y="179.96363636363634" width="49.5" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="255.5" y="190.45454545454544" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">57,394</text>
+<rect x="200" y="196.45454545454544" width="131.6" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="337.6" y="208.94545454545454" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">152,614</text>
+<text x="188" y="240.09090909090907" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">markOfferSent</text>
+<rect x="200" y="221.59999999999997" width="67.2" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="273.2" y="232.09090909090907" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">77,952</text>
+<rect x="200" y="238.09090909090907" width="220.0" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="426.0" y="250.58181818181816" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">255,092</text>
+<text x="188" y="281.7272727272727" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">confirmReceipt</text>
+<rect x="200" y="263.2363636363636" width="55.3" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="261.3" y="273.7272727272727" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">64,161</text>
+<rect x="200" y="279.7272727272727" width="48.2" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="254.2" y="292.2181818181818" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">55,845</text>
+<text x="188" y="323.3636363636363" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">claimAccepted</text>
+<rect x="200" y="304.8727272727272" width="48.0" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="254.0" y="315.3636363636363" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">55,698</text>
+<rect x="200" y="321.3636363636363" width="124.9" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="330.9" y="333.8545454545454" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">144,830</text>
+<text x="188" y="364.99999999999994" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">finalizeClaim</text>
+<rect x="200" y="346.50909090909084" width="38.4" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="244.4" y="356.99999999999994" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">44,549</text>
+<rect x="200" y="362.99999999999994" width="130.5" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="336.5" y="375.49090909090904" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">151,253</text>
+<text x="188" y="406.6363636363636" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">expireOrder</text>
+<rect x="200" y="388.1454545454545" width="59.4" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="265.4" y="398.6363636363636" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">68,820</text>
+<rect x="200" y="404.6363636363636" width="58.4" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="264.4" y="417.1272727272727" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">67,704</text>
+<text x="188" y="448.27272727272725" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">cancelListing</text>
+<rect x="200" y="429.78181818181815" width="36.8" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="242.8" y="440.27272727272725" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">42,645</text>
+<rect x="200" y="446.27272727272725" width="44.4" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="250.4" y="458.76363636363635" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">51,429</text>
+<text x="188" y="489.9090909090909" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">openDispute</text>
+<rect x="200" y="471.4181818181818" width="69.0" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="275.0" y="481.9090909090909" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">79,966</text>
+<rect x="200" y="487.9090909090909" width="221.8" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="427.8" y="500.4" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">257,106</text>
+<text x="188" y="531.5454545454545" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">resolveDispute</text>
+<rect x="200" y="513.0545454545454" width="39.6" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="245.6" y="523.5454545454545" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">45,958</text>
+<rect x="200" y="529.5454545454545" width="131.7" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="337.7" y="542.0363636363636" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">152,662</text>
+<text x="188" y="573.1818181818181" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#111827" text-anchor="end">withdraw</text>
+<rect x="200" y="554.690909090909" width="27.9" height="12.49090909090909" rx="2" fill="#2f6fa8"/>
+<text x="233.9" y="565.1818181818181" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">32,399</text>
+<rect x="200" y="571.1818181818181" width="37.1" height="12.49090909090909" rx="2" fill="#d1495b"/>
+<text x="243.1" y="583.6727272727272" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#1f2937">43,004</text>
+<text x="200" y="638" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280">Sepolia: 2026-11-06 smoke + E1 completion smoke (claim, finalize, expire, withdraw).</text>
+<text x="200" y="654" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" fill="#6b7280">Local and Sepolia cover all 11 operations, but use different gas schedules.</text>
+</svg>

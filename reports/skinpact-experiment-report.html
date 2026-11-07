@@ -1,0 +1,1670 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkinPact Experiment Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --desk: #e7ecf2;
+    --desk-deep: #d8e0e9;
+    --sheet: #ffffff;
+    --paper: #fbfcfd;
+    --ink: #121821;
+    --ink-soft: #334155;
+    --muted: #667484;
+    --faint: #8b98a8;
+    --line: #d9e1e9;
+    --line-strong: #b8c5d3;
+    --steel: #175c86;
+    --steel-deep: #0e3f5c;
+    --steel-soft: #e8f1f7;
+    --steel-wash: #f3f8fb;
+    --amber: #b45309;
+    --amber-soft: #fdf3e7;
+    --red: #b42318;
+    --red-soft: #fdecea;
+    --green: #1f7a5a;
+    --green-soft: #e9f5ef;
+    --slate: #64748b;
+    --slate-soft: #eef2f6;
+    --serif: "Newsreader", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --shadow: 0 22px 60px rgba(20, 35, 54, 0.13), 0 2px 8px rgba(20, 35, 54, 0.06);
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 620px at 50% -10%, #f7f9fb 0%, rgba(247, 249, 251, 0) 60%),
+      linear-gradient(180deg, var(--desk) 0%, #f0f3f7 48%, var(--desk-deep) 100%);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.66;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  a {
+    color: var(--steel);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  a:hover { color: var(--steel-deep); }
+
+  .desk {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 34px 24px 60px;
+  }
+
+  .sheet {
+    background: var(--sheet);
+    border: 1px solid #cfd9e3;
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    padding: 54px 66px 46px;
+  }
+
+  .print-btn {
+    position: fixed;
+    top: 16px;
+    right: 22px;
+    z-index: 20;
+    border: 1px solid var(--line-strong);
+    background: var(--sheet);
+    color: var(--steel-deep);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 9px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(20, 35, 54, 0.1);
+  }
+
+  .print-btn:hover { border-color: var(--steel); }
+
+  /* Cover */
+  .cover {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 30px;
+    margin-bottom: 8px;
+  }
+
+  .cover-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+  }
+
+  .kicker {
+    margin: 0 0 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+    color: var(--steel);
+    font-weight: 600;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 74px;
+    line-height: 0.94;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 18px 0 0;
+    max-width: 640px;
+    font-family: var(--serif);
+    font-size: 24px;
+    line-height: 1.3;
+    color: var(--ink-soft);
+    text-wrap: balance;
+  }
+
+  .cover-meta {
+    flex: 0 0 auto;
+    display: grid;
+    gap: 7px;
+    padding-top: 6px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    margin-top: 32px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .meta-grid > div {
+    padding: 14px 16px 13px 0;
+    border-right: 1px solid var(--line);
+  }
+
+  .meta-grid > div:last-child { border-right: 0; }
+
+  .meta-label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--faint);
+    margin-bottom: 4px;
+  }
+
+  .meta-value {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    word-break: break-word;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 26px;
+  }
+
+  .stat {
+    border: 1px solid var(--line);
+    background: var(--paper);
+    padding: 16px 16px 15px;
+    border-radius: 4px;
+  }
+
+  .stat-number {
+    display: block;
+    font-family: var(--serif);
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--steel-deep);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
+  .draft-note {
+    margin-top: 22px;
+    border: 1px solid #e7cfa8;
+    background: var(--amber-soft);
+    color: #6b4108;
+    border-radius: 4px;
+    padding: 11px 14px;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 218px;
+    gap: 52px;
+    align-items: start;
+    margin-top: 34px;
+  }
+
+  .report { min-width: 0; max-width: 790px; }
+
+  .toc {
+    position: sticky;
+    top: 28px;
+    border-left: 1px solid var(--line);
+    padding-left: 18px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  .toc-title {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 11px;
+  }
+
+  .toc a {
+    display: block;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 3.5px 0;
+  }
+
+  .toc a:hover { color: var(--steel-deep); }
+  .toc .toc-sub { padding-left: 12px; font-size: 11.5px; }
+
+  /* Sections */
+  .section {
+    margin: 58px 0;
+    scroll-margin-top: 24px;
+  }
+
+  .section:first-of-type { margin-top: 26px; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    border-top: 1px solid var(--line-strong);
+    padding-top: 18px;
+    margin-bottom: 22px;
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--steel);
+    letter-spacing: 0.08em;
+    flex: 0 0 auto;
+  }
+
+  h2 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 34px;
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+    font-weight: 600;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  h3 {
+    margin: 34px 0 10px;
+    font-family: var(--serif);
+    font-size: 22px;
+    line-height: 1.25;
+    letter-spacing: -0.012em;
+    font-weight: 600;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  h4 {
+    margin: 24px 0 7px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--ink-soft);
+  }
+
+  p { margin: 0 0 14px; }
+
+  .lead {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--ink-soft);
+  }
+
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin: 6px 0; }
+  li::marker { color: var(--faint); }
+
+  strong { font-weight: 700; color: var(--ink); }
+
+  .mono { font-family: var(--mono); font-size: 0.88em; }
+  .nowrap { white-space: nowrap; }
+
+  .cite {
+    font-family: var(--mono);
+    font-size: 10px;
+    vertical-align: super;
+    line-height: 0;
+    text-decoration: none;
+    color: var(--steel);
+    margin-left: 1px;
+  }
+
+  /* Callouts */
+  .callout {
+    margin: 22px 0;
+    padding: 15px 18px;
+    border-left: 4px solid var(--steel);
+    background: var(--steel-wash);
+    border-radius: 0 4px 4px 0;
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  .callout strong { color: var(--steel-deep); }
+
+  .callout--warn {
+    border-left-color: var(--amber);
+    background: var(--amber-soft);
+  }
+
+  .callout--warn strong { color: #7a4506; }
+
+  .callout--danger {
+    border-left-color: var(--red);
+    background: var(--red-soft);
+  }
+
+  .callout--danger strong { color: #7d1b12; }
+
+  .callout-title {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    color: var(--steel);
+  }
+
+  .callout--warn .callout-title { color: var(--amber); }
+  .callout--danger .callout-title { color: var(--red); }
+
+  /* Tables */
+  .table-wrap {
+    margin: 22px 0 26px;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--sheet);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .data-table caption {
+    caption-side: top;
+    text-align: left;
+    padding: 11px 14px 9px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    background: var(--slate-soft);
+  }
+
+  .data-table th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--line-strong);
+    background: #f7f9fb;
+    white-space: nowrap;
+  }
+
+  .data-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  .data-table td:first-child { white-space: nowrap; }
+
+  .data-table tr:last-child td { border-bottom: 0; }
+  .data-table tr:nth-child(even) td { background: #fcfdfe; }
+  .data-table .num { text-align: right; font-family: var(--mono); font-size: 12px; }
+  .data-table .em { font-weight: 600; color: var(--steel-deep); }
+  .data-table .happy td { background: var(--steel-wash); }
+  .data-table .happy td:first-child { border-left: 3px solid var(--steel); }
+  .data-table .muted { color: var(--muted); }
+  .data-table .small { font-size: 12px; }
+
+  .table-note {
+    margin: -16px 0 26px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  /* Figures */
+  figure {
+    margin: 26px 0 30px;
+    padding: 0;
+  }
+
+  .figure-frame {
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #ffffff;
+    padding: 12px;
+    overflow-x: auto;
+  }
+
+  figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+  }
+
+  figcaption {
+    margin-top: 9px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+    padding-left: 2px;
+  }
+
+  figcaption strong { color: var(--ink-soft); }
+
+  .diagram {
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #ffffff;
+    padding: 14px;
+    overflow-x: auto;
+  }
+
+  .diagram img {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-width: 640px;
+  }
+
+
+  /* Market context */
+  .skin-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin: 10px 0 6px;
+  }
+
+  .skin-card {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper);
+    overflow: hidden;
+    break-inside: avoid;
+  }
+
+  .skin-image {
+    height: 112px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px 2px;
+  }
+
+  .skin-image img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .skin-info {
+    padding: 9px 10px 10px;
+    border-top: 1px solid var(--line);
+  }
+
+  .skin-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .skin-name {
+    font-size: 12px;
+    line-height: 1.25;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .skin-price {
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1;
+    color: var(--steel-deep);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .skin-sub {
+    margin-top: 3px;
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+
+  .skin-meta {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .shot-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 8px 0 6px;
+  }
+
+  .shot-stack {
+    display: grid;
+    gap: 14px;
+    margin: 8px 0 6px;
+  }
+
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+
+  .shot-label {
+    margin-top: 7px;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--ink-soft);
+  }
+
+  .shot-note {
+    margin-top: 2px;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .market-note {
+    margin: -10px 0 26px;
+    font-size: 10.5px;
+    line-height: 1.5;
+    color: var(--faint);
+  }
+
+  /* Process / SmartArt-like */
+  .process {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    margin: 24px 0 10px;
+  }
+
+  .process-step {
+    flex: 1 1 0;
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--steel);
+    background: var(--paper);
+    border-radius: 3px;
+    padding: 13px 12px 14px;
+  }
+
+  .process-step:nth-child(3) { border-top-color: var(--amber); }
+  .process-step:nth-child(5) { border-top-color: var(--green); }
+  .process-step:nth-child(7) { border-top-color: var(--slate); }
+  .process-step:nth-child(9) { border-top-color: var(--red); }
+
+  .process-num {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    margin-bottom: 5px;
+  }
+
+  .process-title {
+    display: block;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+
+  .process-detail {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
+  .process-arrow {
+    align-self: center;
+    color: var(--line-strong);
+    font-size: 18px;
+    flex: 0 0 auto;
+  }
+
+  /* Severity bar */
+  .severity-block {
+    margin: 22px 0 28px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 15px 16px 13px;
+    background: var(--paper);
+  }
+
+  .severity-bar {
+    display: flex;
+    height: 17px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--slate-soft);
+    border: 1px solid #dce3ea;
+  }
+
+  .severity-bar span { display: block; height: 100%; }
+  .severity-bar .seg-accepted { width: 5.9%; background: var(--red); }
+  .severity-bar .seg-medium { width: 17.6%; background: var(--amber); }
+  .severity-bar .seg-low { width: 47.1%; background: var(--steel); }
+  .severity-bar .seg-info { width: 29.4%; background: var(--slate); }
+
+  .severity-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    margin-top: 11px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .severity-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .severity-legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+  .sev-accepted { background: var(--red); }
+  .sev-medium { background: var(--amber); }
+  .sev-low { background: var(--steel); }
+  .sev-info { background: var(--slate); }
+
+  /* Meters */
+  .meter {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--slate-soft);
+    overflow: hidden;
+    margin-top: 7px;
+  }
+
+  .meter > span {
+    display: block;
+    height: 100%;
+    background: var(--steel);
+    border-radius: 999px;
+  }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 6px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .tag--medium { color: #7a4506; background: var(--amber-soft); border-color: #e7cfa8; }
+  .tag--low { color: var(--steel-deep); background: var(--steel-soft); border-color: #c5dbea; }
+  .tag--accepted { color: #7d1b12; background: var(--red-soft); border-color: #efc4bf; }
+  .tag--info { color: #475569; background: var(--slate-soft); border-color: var(--line); }
+  .tag--done { color: var(--green); background: var(--green-soft); border-color: #bfe3d2; }
+
+  /* Key-value / component list */
+  .kv {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--line);
+    margin: 18px 0 24px;
+    font-size: 13.5px;
+  }
+
+  .kv > dt {
+    padding: 9px 12px 9px 0;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .kv > dd {
+    margin: 0;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+
+  /* Contribution */
+  .contribution {
+    margin-top: 10px;
+  }
+
+  .contribution .name {
+    color: var(--faint);
+    font-style: italic;
+  }
+
+  /* References */
+  .refs {
+    padding-left: 24px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  .refs li { margin: 8px 0; }
+  .refs .u { word-break: break-all; font-family: var(--mono); font-size: 11.5px; }
+
+  /* Appendix */
+  .appendix {
+    border-top: 2px solid var(--ink);
+    margin-top: 58px;
+    padding-top: 20px;
+  }
+
+  .appendix h2 { font-size: 28px; }
+
+  .footer {
+    border-top: 1px solid var(--line-strong);
+    margin-top: 48px;
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .screen-only { display: block; }
+
+  @media (max-width: 1040px) {
+    .layout { grid-template-columns: 1fr; gap: 0; }
+    .toc { display: none; }
+    .report { max-width: 100%; }
+  }
+
+  @media (max-width: 720px) {
+    .desk { padding: 14px 10px 40px; }
+    .sheet { padding: 30px 22px 34px; }
+    h1 { font-size: 52px; }
+    .lede { font-size: 20px; }
+    .cover-top { flex-direction: column; gap: 12px; }
+    .cover-meta { text-align: left; grid-template-columns: repeat(3, auto); }
+    .meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .meta-grid > div:nth-child(2) { border-right: 0; }
+    .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    h2 { font-size: 28px; }
+    .section-head { gap: 10px; }
+    .process { flex-wrap: wrap; }
+    .process-step { flex: 1 1 45%; }
+    .process-arrow { display: none; }
+    .kv { grid-template-columns: 1fr; }
+    .kv > dt { border-bottom: 0; padding-bottom: 2px; }
+    .kv > dd { padding-top: 0; }
+    figure img { min-width: 0; }
+  }
+
+  @media print {
+    @page { size: A4; margin: 14mm 13mm 16mm; }
+
+    body {
+      background: #ffffff !important;
+      color: #111111;
+      font-size: 10.2pt;
+      line-height: 1.5;
+    }
+
+    .desk { max-width: none; padding: 0; }
+    .sheet {
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+    }
+
+    .print-btn, .toc, .draft-note, .screen-only { display: none !important; }
+    .layout { display: block; margin-top: 18px; }
+    .report { max-width: none; }
+
+    .cover { break-after: avoid; padding-bottom: 18px; }
+    h1 { font-size: 42pt; }
+    .lede { font-size: 15pt; }
+    .stat-number { font-size: 20pt; }
+    .stat-label { font-size: 8.5pt; }
+
+    .section { margin: 24pt 0; }
+    .section-head { padding-top: 10pt; margin-bottom: 10pt; }
+    h2 { font-size: 19pt; }
+    h3 { font-size: 13pt; margin-top: 16pt; }
+    h4 { font-size: 10.5pt; }
+    p, li { font-size: 10.2pt; }
+    .lead { font-size: 11.5pt; }
+
+    .callout { padding: 9pt 11pt; font-size: 9.6pt; }
+    .table-wrap { break-inside: avoid; }
+    .data-table { font-size: 8.2pt; }
+    .data-table th { font-size: 7.2pt; padding: 5pt 7pt; }
+    .data-table td { padding: 4.5pt 7pt; }
+    .data-table .num { font-size: 7.8pt; }
+    .data-table caption { font-size: 7.2pt; padding: 6pt 7pt; }
+    .table-note { font-size: 8pt; }
+
+    figure, .diagram, .severity-block, .process, .skin-grid, .shot-grid, .shot-stack { break-inside: avoid; }
+    figure { margin: 14pt 0 16pt; }
+    .figure-frame { padding: 4pt; }
+    figcaption { font-size: 8.2pt; }
+    .process-step { padding: 7pt; }
+    .process-title { font-size: 9pt; }
+    .process-detail { font-size: 7.8pt; }
+    .skin-image { height: 82pt; }
+    .skin-price { font-size: 15pt; }
+    .shot-label { font-size: 8.5pt; }
+    .shot-note { font-size: 7.5pt; }
+
+    .appendix { break-before: auto; border-top-width: 1pt; margin-top: 18pt; }
+    .footer { margin-top: 24pt; }
+
+    a { color: #111111; text-decoration: none; }
+    .cite { color: #111111; }
+    .refs .u { color: #333333; }
+  }
+</style>
+</head>
+<body>
+<div class="desk">
+  <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+
+  <div class="sheet">
+    <header class="cover">
+      <div class="cover-top">
+        <div>
+          <p class="kicker">Experiment Analysis Report · 35% Component</p>
+          <h1>SkinPact</h1>
+          <p class="lede">Testnet escrow for CS2 skin trades — gas economics, dispute design, and security boundaries</p>
+        </div>
+        <div class="cover-meta">
+          <span>Final Project</span>
+          <span>2026-11-07</span>
+          <span>Testnet only</span>
+        </div>
+      </div>
+
+      <div class="meta-grid">
+        <div>
+          <span class="meta-label">Contract</span>
+          <span class="meta-value">0x2Ffca056…460eF</span>
+        </div>
+        <div>
+          <span class="meta-label">Network</span>
+          <span class="meta-value">Sepolia · 11155111</span>
+        </div>
+        <div>
+          <span class="meta-label">Code under test</span>
+          <span class="meta-value">commit 6d8ffa0</span>
+        </div>
+        <div>
+          <span class="meta-label">Repository</span>
+          <span class="meta-value">github.com/identity411/dapps</span>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat">
+          <span class="stat-number">11</span>
+          <span class="stat-label">operations measured on local Hardhat and Sepolia</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">1,173,272</span>
+          <span class="stat-label">Sepolia happy-path gas (create + buy + mark + confirm)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">$3,520</span>
+          <span class="stat-label">break-even item price at a 1% fee (10 gwei, $3,000/ETH)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">0</span>
+          <span class="stat-label">Slither High / Medium findings; 5 informational</span>
+        </div>
+      </div>
+
+      <div class="draft-note screen-only">
+        Draft for team review. Fill in member names, contribution percentages, and the video link before submission.
+        The submitted file name uses the team-member count, for example <span class="mono">5-SkinPact.pdf</span>.
+      </div>
+    </header>
+
+    <div class="layout">
+      <main class="report">
+        <section class="section" id="abstract">
+          <div class="section-head">
+            <span class="section-num">00</span>
+            <h2>Abstract</h2>
+          </div>
+          <p class="lead">SkinPact is a testnet escrow marketplace for CS2 skins. It separates two concerns that Steam trades couple together: the transfer of the item and the transfer of value. The buyer funds on-chain escrow, the seller locks a bond, and the seller sends a Steam trade offer. The buyer can confirm receipt, or the seller can claim delivery with off-chain evidence; the buyer has a challenge window, and a designated arbiter settles disputes. The contract never claims to verify Steam.</p>
+          <p>This report analyzes the system experimentally. E1 measures the gas cost of all eleven state-changing operations on local Hardhat and Sepolia, compares gas with 1% / 2.5% / 5% platform fees, and derives break-even item prices. E2 builds a 42-scenario threat model, executes 67 automated tests and a 99-check local E2E flow, runs Slither and coverage, and distills the result into findings and a trust table. The central result is honest rather than promotional: the escrow design is coherent and no exploitable authorization, reentrancy, or double-settlement defect was found in the tested scope, but L1 gas makes low-priced trades uneconomic, Steam delivery remains unverifiable on-chain, and the arbiter plus the buyer Trade URL are the residual trust points. The system is a testnet prototype, not a production marketplace.</p>
+        </section>
+
+        <section class="section" id="introduction">
+          <div class="section-head">
+            <span class="section-num">01</span>
+            <h2>Introduction</h2>
+          </div>
+
+          <h3>1.1 The problem</h3>
+          <p>CS2 skins are valuable digital assets that live inside Steam, not on a public ledger. A trade is executed through a Steam trade offer: the seller selects the item, the buyer accepts in Steam Guard, and Steam transfers custody. The trade is asynchronous, off-chain, and irreversible once accepted. A buyer who pays first risks non-delivery; a seller who delivers first risks non-payment. Platform intermediaries reduce this risk but charge for it. The Steam Community Market charges a 15% seller fee for CS2 items (5% Steam transaction fee plus 10% game fee), and the seller receives Steam Wallet balance rather than withdrawable cash.<span class="cite"><a href="#ref-1">[1]</a></span> Third-party markets such as BUFF163 and YouPin898 advertise lower seller fees — 1.5% and 1%, respectively, at the time of writing — but they still introduce custody, account, and platform-trust assumptions.<span class="cite"><a href="#ref-2">[2]</a><a href="#ref-3">[3]</a></span></p>
+
+          <p>The core design question is not “how do we remove fees?” A zero-fee marketplace that loses the item is worse than a 15% fee. The question is whether a smart-contract escrow can provide a credible settlement layer around an off-chain delivery rail, and what that costs.</p>
+
+          <h3>1.2 Research questions</h3>
+          <ul>
+            <li><strong>RQ1 — Cost.</strong> How much gas does each SkinPact operation consume, and at what item price does gas become cheaper than a 1%, 2.5%, or 5% platform fee?</li>
+            <li><strong>RQ2 — Trust.</strong> Can the contract, Relay, and helper resist unauthorized calls, reentrancy, state bypasses, fake claims, and Trade URL leakage? Which trust assumptions remain?</li>
+            <li><strong>RQ3 — Usability.</strong> Can a new user understand the seller-helper and Steam-accept flow? We did not run a formal user study; this is treated as a disclosed limitation, not as evidence.</li>
+          </ul>
+
+          <h3>1.3 Contributions</h3>
+          <ul>
+            <li>A concrete S2-mini escrow design with a bond, pull payments, a challenge window, and an arbiter-backed dispute path.</li>
+            <li>A reproducible gas dataset covering all eleven operations on local Hardhat and Sepolia, with source-linked fee data and break-even analysis.</li>
+            <li>A report-level security analysis: 42 threat scenarios, 17 findings, a trust table, static analysis, coverage, and a 99-check E2E flow.</li>
+            <li>An explicit accounting of what the experiments do <em>not</em> prove: Steam delivery, production security, and user acceptance.</li>
+          </ul>
+        </section>
+
+        <section class="section" id="background">
+          <div class="section-head">
+            <span class="section-num">02</span>
+            <h2>Background and Related Work</h2>
+          </div>
+
+          <h3>2.1 Steam delivery</h3>
+          <p>A Steam trade offer is a bearer-style, asynchronous transfer. The recipient accepts it in the Steam mobile app, and the trade is final once Steam processes it. The seller cannot prove delivery to a smart contract, and the buyer cannot prove non-delivery to a smart contract either. Any system that escrows value around a Steam trade can only <em>record observations</em> made by a trusted or semi-trusted component. This is the central boundary of SkinPact.</p>
+
+          <h3>2.2 Marketplace economics</h3>
+          <p>Table 3 in §6.3 compares the rates used in this report. The important distinction is between a <em>platform fee</em> and a <em>transaction cost</em>. A platform fee scales with item price; L1 gas is roughly fixed per operation. For cheap skins, the fixed cost dominates. The experiment is designed to make that trade-off visible rather than to claim that “zero fee” means “zero cost.”</p>
+
+          <h3>2.3 Escrow, bonds, and pull payments</h3>
+          <p>SkinPact uses a small set of well-understood mechanisms: an on-chain escrow, a seller bond proportional to price (minimum 0.001 test ETH), pull payments for withdrawals, and a status machine that prevents settlement from a terminal state. The arbiter is the only privileged role. The contract has no owner, no emergency withdrawal, and no upgrade path. These choices reduce on-chain authority but move trust into the arbiter and the off-chain evidence process.</p>
+
+          <h3>2.4 Market context</h3>
+          <p>To ground the fee analysis in real listings, we sampled four CS2 items across price bands on the Steam Community Market on 2026-11-07. The sample spans a $21.79 pistol skin to a $479.83 rifle skin. These prices are market context; the on-chain experiments use a fixed 0.01 test ETH listing, not real money.</p>
+
+          <figure>
+            <div class="skin-grid">
+              <div class="skin-card">
+                <div class="skin-image"><img src="assets/skin-glock-water-elemental.png" alt="Glock-18 Water Elemental CS2 skin"></div>
+                <div class="skin-info">
+                  <div class="skin-top"><span class="skin-name">Glock-18</span><span class="skin-price">$21.79</span></div>
+                  <div class="skin-sub">Water Elemental · Field-Tested</div>
+                  <div class="skin-meta">Steam · 258 listings</div>
+                </div>
+              </div>
+              <div class="skin-card">
+                <div class="skin-image"><img src="assets/skin-ak47-redline.png" alt="AK-47 Redline CS2 skin"></div>
+                <div class="skin-info">
+                  <div class="skin-top"><span class="skin-name">AK-47</span><span class="skin-price">$32.13</span></div>
+                  <div class="skin-sub">Redline · Field-Tested</div>
+                  <div class="skin-meta">Steam · 1,224 listings</div>
+                </div>
+              </div>
+              <div class="skin-card">
+                <div class="skin-image"><img src="assets/skin-awp-asiimov.png" alt="AWP Asiimov CS2 skin"></div>
+                <div class="skin-info">
+                  <div class="skin-top"><span class="skin-name">AWP</span><span class="skin-price">$127.42</span></div>
+                  <div class="skin-sub">Asiimov · Field-Tested</div>
+                  <div class="skin-meta">Steam · 170 listings</div>
+                </div>
+              </div>
+              <div class="skin-card">
+                <div class="skin-image"><img src="assets/skin-m4a1s-printstream.png" alt="M4A1-S Printstream CS2 skin"></div>
+                <div class="skin-info">
+                  <div class="skin-top"><span class="skin-name">M4A1-S</span><span class="skin-price">$479.83</span></div>
+                  <div class="skin-sub">Printstream · Factory New</div>
+                  <div class="skin-meta">Steam · 32 listings</div>
+                </div>
+              </div>
+            </div>
+            <figcaption><strong>Figure 1.</strong> Four CS2 items sampled from the Steam Community Market on 2026-11-07. Prices are USD; listing counts are active sell listings. The sample is context, not a price survey; Steam prices move by region and time.</figcaption>
+          </figure>
+
+          <p>The delivery rail is Steam, but the competing marketplaces are not. Steam Community Market, BUFF163, and YouPin898 all list the same kind of item with different fee and custody models. The screenshots below are public pages, included to make the comparison concrete rather than to endorse a vendor.</p>
+
+          <figure>
+            <div class="figure-frame">
+              <img src="assets/steam-market-card.png" alt="Steam Community Market listing page for AK-47 Redline">
+            </div>
+            <figcaption><strong>Figure 2.</strong> Steam Community Market listing for AK-47 | Redline (Field-Tested), English UI with a localized HKD price strip. The USD price used in Figure 1 comes from the Steam Market API; public page, accessed 2026-11-07.</figcaption>
+          </figure>
+
+          <figure>
+            <div class="shot-stack">
+              <div class="shot">
+                <img src="assets/buff-fee-crop.png" alt="BUFF163 official announcement reducing seller fee from 2.5% to 1.5%">
+                <div class="shot-label">BUFF163 · official fee announcement</div>
+                <div class="shot-note">Seller fee cut from 2.5% to 1.5%; withdrawal fee 1%. Public announcement, accessed 2026-11-07.</div>
+              </div>
+              <div class="shot">
+                <img src="assets/youpin-market-crop.png" alt="YouPin898 public CS2 market page with CNY listings">
+                <div class="shot-label">YouPin898 · public market</div>
+                <div class="shot-note">CNY listings from the public market page. Seller fee 1% (SteamDB, verified 2026-07-01). Accessed 2026-11-07.</div>
+              </div>
+            </div>
+            <figcaption><strong>Figure 3.</strong> Centralized alternatives. BUFF publishes a 1.5% seller fee; YouPin's public market lists items in CNY. Screenshots show public pages only; trademarks remain with their owners; no account data is shown.</figcaption>
+          </figure>
+
+          <p class="market-note">The screenshots are illustrative and may show localized currencies or promotional content. The numeric analysis uses the source-linked fee rates and the USD Steam Market API prices, not OCR from the images.</p>
+
+        </section>
+
+        <section class="section" id="design">
+          <div class="section-head">
+            <span class="section-num">03</span>
+            <h2>Design</h2>
+          </div>
+
+          <h3>3.1 Roles and trust boundaries</h3>
+          <p>Five roles participate: seller, buyer, arbiter, Relay, and the seller-local helper. Steam is the external delivery system. The buyer and seller use a React web client and MetaMask; the seller also runs a local helper that holds the Steam session and sends the trade offer. The Relay stores item metadata, authenticates wallets, pairs helpers, and holds the buyer Trade URL encrypted at rest. The contract holds escrow and is the only component that can move funds.</p>
+
+          <figure>
+            <div class="diagram">
+              <img src="assets/architecture.svg" alt="Trust boundary diagram showing user devices, the off-chain Relay, the on-chain contract and arbiter, and Steam, with labeled flows.">
+            </div>
+            <figcaption><strong>Figure 4.</strong> Trust boundaries. Solid arrows are instructions or data; dashed borders mark off-chain trust domains. The contract moves value; the Relay and helper coordinate delivery; Steam is authoritative for the item but invisible to the contract.</figcaption>
+          </figure>
+
+          <h3>3.2 State machine</h3>
+          <p>The contract has nine states. The happy path is <span class="mono">Active → Funded → OfferSent → ClaimPending → Completed</span>. The seller can cancel only while <span class="mono">Active</span>; the buyer can confirm from <span class="mono">Funded</span>, <span class="mono">OfferSent</span>, or <span class="mono">ClaimPending</span>; anyone can expire a <span class="mono">Funded</span> order after the offer deadline; and a buyer dispute from <span class="mono">ClaimPending</span> moves the order to <span class="mono">Disputed</span> before the challenge deadline. Once disputed, only the arbiter can settle.</p>
+
+          <figure>
+            <div class="diagram">
+              <img src="assets/state-machine.svg" alt="S2-mini state machine with Active, Funded, OfferSent, ClaimPending, Completed, Cancelled, Refunded, and Disputed states.">
+            </div>
+            <figcaption><strong>Figure 5.</strong> S2-mini state machine. The fast path is <span class="mono">claim → challenge → finalize</span>; the buyer fast path is <span class="mono">confirmReceipt</span>. Permissionless expiry and finalization provide liveness when the counterparty stops responding.</figcaption>
+          </figure>
+
+          <h3>3.3 Escrow, bond, and pull payments</h3>
+          <p>When a seller creates a listing, the bond is <span class="mono">max(price / 10, minBond)</span>. With a 0.01 test ETH price and a 0.001 test ETH minimum bond, the seller locks 0.001 and the buyer later locks 0.01. The contract credits balances rather than pushing ETH during settlement, and <span class="mono">withdraw()</span> is guarded by OpenZeppelin's <span class="mono">ReentrancyGuard</span>.<span class="cite"><a href="#ref-7">[7]</a></span> The design has no owner, no emergency withdrawal, and no upgrade path; the arbiter is immutable at construction.</p>
+
+          <h3>3.4 Dispute and liveness</h3>
+          <p>A dispute can be opened from <span class="mono">OfferSent</span> by either party before the delivery deadline, or by anyone after it. From <span class="mono">ClaimPending</span>, only the buyer can dispute before the challenge deadline. The arbiter can resolve a disputed listing in either direction, optionally awarding the seller bond to the buyer. Three permissionless paths keep the system live: <span class="mono">expireOrder</span> after the offer deadline, <span class="mono">finalizeClaim</span> after the challenge deadline, and <span class="mono">openDispute</span> after the delivery deadline. None of these verify Steam; they only bound how long escrow can wait.</p>
+        </section>
+
+        <section class="section" id="implementation">
+          <div class="section-head">
+            <span class="section-num">04</span>
+            <h2>Implementation</h2>
+          </div>
+
+          <h3>4.1 Contract and monorepo</h3>
+          <p>SkinPact is a TypeScript monorepo with four workspaces: <span class="mono">shared</span> (hashing, ABI, Trade URL parsing), <span class="mono">contracts</span> (Solidity 0.8.24, Hardhat), <span class="mono">relay</span> (Express, SQLite, ethers), and <span class="mono">helper</span> (Steam session, trade-offer manager, local loopback API). The web client is React/Vite with MetaMask. The contract is deployed and verified on Sepolia at <span class="mono">0x2Ffca056…460eF</span>; the deployment uses a 0.1 test ETH max price, a 0.001 test ETH minimum bond, a 600 s offer window, a 300 s challenge window, and a 3,600 s delivery window.</p>
+
+          <h3>4.2 Off-chain coordination</h3>
+          <p>The Relay authenticates wallets with a one-time nonce and a signed message, then issues a one-hour JWT. It stores buyer Trade URLs with AES-256-GCM, reveals them only to the funded listing's seller, and deletes the row when the listing becomes terminal. The helper pairs with a one-time six-digit code, holds the seller's Steam session locally, sends the trade offer, observes the Steam state, and uploads an acceptance evidence hash. The buyer's Trade URL is a bearer secret; the Relay can decrypt it at runtime. This is a deliberate, disclosed trust boundary, not an accident.</p>
+
+          <h3>4.3 Evidence base</h3>
+          <p>The implementation is supported by 67 automated tests: 36 contract tests, 18 Relay tests, 12 helper tests, and 1 shared test. The local E2E flow exercises P1–P8 with 99 checks against a real in-process Relay and an ephemeral Hardhat chain; Steam is explicitly mocked. The E2E covers buyer confirmation, seller claim plus challenge finalization, expiry, cancellation, Trade URL encryption and cleanup, and three dispute outcomes. The Sepolia completion smoke adds the four operations the original smoke did not cover: <span class="mono">claimAccepted</span>, <span class="mono">finalizeClaim</span>, <span class="mono">expireOrder</span>, and <span class="mono">withdraw</span>.</p>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <caption>Table 1 · Implementation evidence map</caption>
+              <thead>
+                <tr><th>Layer</th><th>Implemented behavior</th><th>Evidence</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Contract</td><td>Escrow, bond, status machine, disputes, pull payments</td><td>36 tests; invariant checks</td></tr>
+                <tr><td>Relay</td><td>Wallet auth, encrypted Trade URL vault, helper pairing, evidence</td><td>18 tests; E2E P4</td></tr>
+                <tr><td>Helper</td><td>QR login, offer send/observe, redaction, local API</td><td>12 tests; manual Steam exit check</td></tr>
+                <tr><td>E2E</td><td>P1–P8 contract + Relay flow</td><td>99 checks; Steam mocked</td></tr>
+                <tr><td>Sepolia</td><td>Deployment, verification, 11 operations</td><td>Verified contract; 22 Sepolia txs (15 gas rows)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="methodology">
+          <div class="section-head">
+            <span class="section-num">05</span>
+            <h2>Experiment Methodology</h2>
+          </div>
+
+          <p>E1 and E2 ask different questions but use the same discipline: define the question, instrument the environment, execute a reproducible procedure, normalize the raw data, and validate the claims against limitations. The local vs Sepolia gas discrepancy is treated as a finding, not smoothed away.</p>
+
+          <div class="process" role="list" aria-label="Experiment methodology pipeline">
+            <div class="process-step" role="listitem">
+              <span class="process-num">01 / DEFINE</span>
+              <span class="process-title">Questions</span>
+              <span class="process-detail">Cost, trust boundaries, and the limits of each claim.</span>
+            </div>
+            <div class="process-arrow" aria-hidden="true">→</div>
+            <div class="process-step" role="listitem">
+              <span class="process-num">02 / INSTRUMENT</span>
+              <span class="process-title">Environments</span>
+              <span class="process-detail">Hardhat Osaka; Sepolia completion smoke; local Relay.</span>
+            </div>
+            <div class="process-arrow" aria-hidden="true">→</div>
+            <div class="process-step" role="listitem">
+              <span class="process-num">03 / EXECUTE</span>
+              <span class="process-title">Runs</span>
+              <span class="process-detail">11 gas operations; tests; Slither; coverage; E2E.</span>
+            </div>
+            <div class="process-arrow" aria-hidden="true">→</div>
+            <div class="process-step" role="listitem">
+              <span class="process-num">04 / NORMALIZE</span>
+              <span class="process-title">Data</span>
+              <span class="process-detail">CSV, fee sources, severity rubric, trust table.</span>
+            </div>
+            <div class="process-arrow" aria-hidden="true">→</div>
+            <div class="process-step" role="listitem">
+              <span class="process-num">05 / VALIDATE</span>
+              <span class="process-title">Claims</span>
+              <span class="process-detail">Cross-check numbers, disclose assumptions and limits.</span>
+            </div>
+          </div>
+
+          <p><strong>Measurement conventions.</strong> Local gas is measured on a fresh in-process Hardhat chain. Setup transactions are excluded; only the target operation's receipt is recorded. Local transactions use a fixed 1 gwei reporting price so the fee column is deterministic; this is a reporting convention, not a market price. Sepolia gas comes from real receipts. The local and Sepolia numbers are never summed.</p>
+
+          <p><strong>Assumptions.</strong> The economic illustration assumes $3,000 per ETH and gas prices of 1, 10, and 50 gwei. Test ETH has no real value. The observed Sepolia gas price during the runs was 16–19 wei, which is an idle-testnet artifact and is not used for the economic conclusion. The 1% / 2.5% / 5% fee tiers are sensitivity inputs; the competitor rates are sourced separately.</p>
+        </section>
+
+        <section class="section" id="e1">
+          <div class="section-head">
+            <span class="section-num">06</span>
+            <h2>E1 — Gas, Fees, and Break-even</h2>
+          </div>
+
+          <h3>6.1 Method</h3>
+          <p>E1 measures the eleven state-changing operations defined in the S2-mini contract: <span class="mono">createListing</span>, <span class="mono">buy</span>, <span class="mono">markOfferSent</span>, <span class="mono">confirmReceipt</span>, <span class="mono">claimAccepted</span>, <span class="mono">finalizeClaim</span>, <span class="mono">expireOrder</span>, <span class="mono">cancelListing</span>, <span class="mono">openDispute</span>, <span class="mono">resolveDispute</span>, and <span class="mono">withdraw</span>. The scenario is a 0.01 test ETH listing with a 0.001 bond, matching the deployment configuration. Local measurements ran on the in-process Hardhat network; Sepolia measurements combine the original 2026-11-06 smoke with a 2026-11-07 completion smoke that waited through the real 300 s challenge window and 600 s offer window.</p>
+
+          <div class="callout">
+            <span class="callout-title">A methodological finding</span>
+            During the Sepolia runs, the network exhibited <strong>Amsterdam-era gas rules</strong> (state-creation repricing consistent with EIP-8037/8038, and the EIP-7708 ETH-transfer log from <span class="mono">0xffff…fffe</span>), while Hardhat 2.29.1 defaulted to <strong>Osaka</strong>.<span class="cite"><a href="#ref-4">[4]</a><a href="#ref-5">[5]</a><a href="#ref-6">[6]</a></span> The same operation can therefore differ by 2.6–4×. The report presents both columns and never mixes them.
+          </div>
+
+          <h3>6.2 Gas results</h3>
+          <p>Table 2 reports gas used per operation on both environments. The four rows highlighted in blue are the happy path. Sepolia's state-creating operations are substantially more expensive than local Hardhat's; <span class="mono">expireOrder</span> and <span class="mono">withdraw</span> are close to local because they do not create as many new storage slots.</p>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <caption>Table 2 · Gas used per operation (happy-path rows highlighted)</caption>
+              <thead>
+                <tr><th>Operation</th><th class="num">Local Osaka</th><th class="num">Sepolia Amsterdam</th><th class="num">Ratio</th></tr>
+              </thead>
+              <tbody>
+                <tr class="happy"><td><span class="mono">createListing</span></td><td class="num">175,001</td><td class="num">709,721</td><td class="num">4.06×</td></tr>
+                <tr class="happy"><td><span class="mono">buy</span></td><td class="num">57,394</td><td class="num">152,614</td><td class="num">2.66×</td></tr>
+                <tr class="happy"><td><span class="mono">markOfferSent</span></td><td class="num">77,952</td><td class="num">255,092</td><td class="num">3.27×</td></tr>
+                <tr class="happy"><td><span class="mono">confirmReceipt</span></td><td class="num">64,161</td><td class="num">55,845</td><td class="num">0.87×</td></tr>
+                <tr><td><span class="mono">claimAccepted</span></td><td class="num">55,698</td><td class="num">144,830</td><td class="num">2.60×</td></tr>
+                <tr><td><span class="mono">finalizeClaim</span></td><td class="num">44,549</td><td class="num">151,253</td><td class="num">3.40×</td></tr>
+                <tr><td><span class="mono">expireOrder</span></td><td class="num">68,820</td><td class="num">67,704</td><td class="num">0.98×</td></tr>
+                <tr><td><span class="mono">cancelListing</span></td><td class="num">42,645</td><td class="num">51,429</td><td class="num">1.21×</td></tr>
+                <tr><td><span class="mono">openDispute</span></td><td class="num">79,966</td><td class="num">257,106</td><td class="num">3.22×</td></tr>
+                <tr><td><span class="mono">resolveDispute</span></td><td class="num">45,958</td><td class="num">152,662</td><td class="num">3.32×</td></tr>
+                <tr><td><span class="mono">withdraw</span></td><td class="num">32,399</td><td class="num">43,004</td><td class="num">1.33×</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-note">Local: Hardhat 2.29.1, Osaka default, target-tx gas only, fixed 1 gwei reporting price. Sepolia: receipt gasUsed, 0.01 test ETH price, 0.001 bond. Ratios are Sepolia ÷ local; values below 1 mean Sepolia was cheaper.</p>
+          <figure>
+            <div class="figure-frame">
+              <img src="assets/gas-by-operation.svg" alt="Grouped bar chart comparing local Osaka and Sepolia Amsterdam gas for eleven SkinPact operations.">
+            </div>
+            <figcaption><strong>Figure 6.</strong> Gas by operation. Sepolia state creation dominates <span class="mono">createListing</span>, <span class="mono">markOfferSent</span>, <span class="mono">openDispute</span>, and claim resolution; <span class="mono">expireOrder</span> and <span class="mono">withdraw</span> are close across environments. Source: <span class="mono">experiments/e1/</span>.</figcaption>
+          </figure>
+
+          <h3>6.3 Fee comparison</h3>
+          <p>The analysis uses two kinds of numbers. The 1% / 2.5% / 5% tiers are hypothetical sensitivity inputs; they are not claims about a specific competitor. The competitor rates in Table 3 are sourced and dated. BUFF's official announcement is authoritative for 1.5%, although third-party trackers still display 2.5–3%. The discrepancy is disclosed rather than silently resolved.</p>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <caption>Table 3 · Seller fee sources</caption>
+              <thead>
+                <tr><th>Platform</th><th class="num">Seller fee</th><th class="num">Buyer fee</th><th>Source and date</th><th>Note</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Steam Community Market (CS2)</td><td class="num">15%</td><td class="num">0%</td><td><a href="#ref-1">SteamDB, accessed 2026-11-07</a></td><td>5% Steam + 10% CS2 game fee</td></tr>
+                <tr><td>BUFF163</td><td class="num">1.5%</td><td class="num">0%</td><td><a href="#ref-2">Official announcement, accessed 2026-11-07</a></td><td>Cut from 2.5% to 1.5% (effective 4-14); withdrawal 1%</td></tr>
+                <tr><td>YouPin898</td><td class="num">1%</td><td class="num">0%</td><td><a href="#ref-3">SteamDB, last verified 2026-07-01</a></td><td>Seller fee only</td></tr>
+                <tr><td>Assumed tiers</td><td class="num">1% / 2.5% / 5%</td><td class="num">0%</td><td>Analysis assumption</td><td>Sensitivity inputs, not competitor claims</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>6.4 Break-even</h3>
+          <p>Break-even item price is the gas cost of a successful trade divided by the fee rate. The happy path is <span class="mono">createListing + buy + markOfferSent + confirmReceipt</span>; <span class="mono">withdraw</span> is a post-settlement payout and is excluded from the sum, so the numbers below are a lower bound on total cost. At 10 gwei and $3,000/ETH, the Sepolia happy path costs about <strong>$35.20</strong>; the local Osaka path costs about <strong>$11.24</strong>.</p>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <caption>Table 4 · Break-even item price at 10 gwei and $3,000/ETH</caption>
+              <thead>
+                <tr><th>Fee rate</th><th class="num">Sepolia gas cost</th><th class="num">Sepolia break-even</th><th class="num">Local gas cost</th><th class="num">Local break-even</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>1%</td><td class="num">$35.20</td><td class="num em">$3,520</td><td class="num">$11.24</td><td class="num">$1,124</td></tr>
+                <tr><td>2.5%</td><td class="num">$35.20</td><td class="num em">$1,408</td><td class="num">$11.24</td><td class="num">$449</td></tr>
+                <tr><td>5%</td><td class="num">$35.20</td><td class="num em">$704</td><td class="num">$11.24</td><td class="num">$225</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <figure>
+            <div class="figure-frame">
+              <img src="assets/fee-breakeven.svg" alt="Line chart of break-even item price versus gas price for 1%, 2.5%, and 5% fees, comparing Sepolia and local gas.">
+            </div>
+            <figcaption><strong>Figure 7.</strong> Break-even item price vs gas price. Solid lines are Sepolia; dashed lines are local Osaka. At 10 gwei, the Sepolia break-even prices are $3,520 / $1,408 / $704 for 1% / 2.5% / 5%. Below a curve, gas costs less than the fee; above it, gas dominates.</figcaption>
+          </figure>
+
+          <figure>
+            <div class="figure-frame">
+              <img src="assets/real-item-costs.svg" alt="Log-scale bar chart comparing Steam, BUFF, and YouPin seller fees with SkinPact gas on four real CS2 items.">
+            </div>
+            <figcaption><strong>Figure 8.</strong> Platform fee vs SkinPact gas on the four items from Figure 1. Gas is fixed at $35.20 (10 gwei, $3,000/ETH); seller fees scale with price. Gas exceeds the 1.5%/1% fees on all four items, and exceeds the 15% Steam fee on the three lower-priced items (Glock-18, AK-47, AWP). Source: Steam Market prices, 2026-11-07; fee rates from Table 3.</figcaption>
+          </figure>
+
+          <h3>6.5 Interpretation</h3>
+          <p>Figure 8 makes the fixed-cost problem concrete. On the $21.79 Glock and the $32.13 AK-47, gas is roughly 7–11× the Steam fee; on the $479.83 M4A1-S, gas ($35.20) is below Steam's $71.97 fee but still above BUFF's $7.20 and YouPin's $4.80. L1 escrow therefore does not undercut the 1–1.5% centralized markets at these price points; its case rests on custody and dispute design, not on transaction cost.</p>
+
+          <p>For cheap CS2 skins, the fixed L1 cost dominates. At a 1% fee, an item must be worth more than roughly <strong>$3,520</strong> before gas is cheaper than the fee; at 2.5%, roughly <strong>$1,408</strong>; at 5%, roughly <strong>$704</strong>. The local Osaka numbers are lower but are not the deployment environment. The honest conclusion is that <strong>a zero platform fee is not a zero cost</strong>. The design is more attractive on an L2 or with a cheaper execution environment, or for higher-priced items. The observed Sepolia fees during the runs (16–19 wei; 70,700,971 wei across the original and completion target transactions) are an idle-testnet artifact and are not representative.</p>
+
+          <div class="callout callout--warn">
+            <span class="callout-title">Threats to validity</span>
+            Local and Sepolia gas schedules differ (Osaka vs Amsterdam); the numbers are reported side by side and are not mixed. The economic conclusion depends on the $3,000 ETH assumption and the 1/10/50 gwei scenarios. The Sepolia smoke is a small number of runs, and the completion smoke's setup transactions are excluded from the CSV. The happy-path sum excludes withdrawal, making the break-even figures a lower bound.
+          </div>
+
+          <h3>6.6 Why four on-chain transactions?</h3>
+          <p>The current version deliberately keeps every state transition on-chain: <span class="mono">createListing</span> locks the bond and writes the listing, <span class="mono">buy</span> funds escrow, <span class="mono">markOfferSent</span> records the seller's declaration, and <span class="mono">confirmReceipt</span> settles. This maximizes on-chain auditability: the contract, not a server, holds the authoritative order state, and anyone can reconstruct the path. The cost is four transactions: 1,173,272 gas ≈ $35.20 at 10 gwei and $3,000/ETH. Two observations matter for a v2: <span class="mono">markOfferSent</span> is 255,092 gas (22%) and moves no funds, while <span class="mono">createListing</span> is 709,721 gas (60%) and includes the bond.</p>
+          <p>A v2 would use an EIP-712 signed listing off-chain, a reusable bond vault (one deposit, reused across listings), and an off-chain signed mark attestation; only two transactions remain on-chain: buyer funding (<span class="mono">buy</span>) and settlement (<span class="mono">confirmReceipt</span>, or <span class="mono">claimAccepted</span> plus <span class="mono">finalizeClaim</span>). At the same Sepolia gas units and 10 gwei/$3,000, funding plus confirmation is 208,459 gas ≈ <strong>$6.25</strong> (about 82% less), plus the bond deposit and optional withdrawal; the claim path is 448,697 gas ≈ <strong>$13.46</strong>. This is the model used by NFT order books: Seaport and 0x keep listings and orders off-chain as signed messages and settle only fulfillment on-chain.<span class="cite"><a href="#ref-15">[15]</a><a href="#ref-16">[16]</a></span> Centralized CS2 markets go further: Skinport, BUFF, and YouPin use an internal ledger and Steam trade bots, so the buyer pays no chain gas at all, in exchange for platform fees and custody.<span class="cite"><a href="#ref-17">[17]</a><a href="#ref-18">[18]</a></span></p>
+          <div class="callout">
+            <span class="callout-title">Auditability vs gas: three points on the spectrum</span>
+            <strong>Current SkinPact:</strong> 4 on-chain txs, about $35.20 at 10 gwei/$3,000; maximum on-chain state and auditability. <strong>v2:</strong> off-chain signed listing + off-chain mark; 2 on-chain txs (fund + settle), about $6.25 plus bond; same escrow guarantees at settlement, but the order book and mark depend on Relay availability. <strong>Centralized CS2 market:</strong> 0 chain gas, 1–8% platform fee, and a custodian; the operator holds the item/account and the dispute process.
+          </div>
+          <p>The trade-off is real: an off-chain order book depends on the Relay serving valid signed orders, with replay protection, cancellation, and expiry; the bond still needs on-chain collateral; and the buyer still needs one funding transaction and one settlement transaction for a trust-minimized escrow. The current version chooses maximum on-chain auditability for the course; the compressed flow, a relayer/paymaster, or an L2 is future work. A relayer or paymaster can hide gas from the user, but it cannot make the network fee disappear—someone still pays it.</p>
+
+        </section>
+
+        <section class="section" id="e2">
+          <div class="section-head">
+            <span class="section-num">07</span>
+            <h2>E2 — Security and Trust Boundaries</h2>
+          </div>
+
+          <h3>7.1 Threat model</h3>
+          <p>E2 asks whether the contract, Relay, and helper can resist unauthorized calls, reentrancy, state bypasses, fake claims, and Trade URL leakage — and which trust assumptions remain. The threat model covers malicious buyers, sellers, arbiters, Relay operators, helper operators, local machine attackers, and network attackers. Assets include escrowed price and bond, the CS2 item, buyer Trade URLs, seller Steam sessions, evidence, and the Relay's encryption and JWT secrets. The full model contains 42 scenarios; the most important are summarized in Table 5.</p>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <caption>Table 5 · Selected threats and their treatment</caption>
+              <thead>
+                <tr><th>ID</th><th>Threat</th><th>Mitigation</th><th>Residual</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="mono">T-01</td><td>Unauthorized party calls seller/buyer/arbiter functions</td><td>Role checks; 36 contract tests</td><td>None found</td></tr>
+                <tr><td class="mono">T-04</td><td>Double settlement or replay</td><td>Terminal-state guards; status machine</td><td>None found</td></tr>
+                <tr><td class="mono">T-06</td><td>Offer hash reused across listings</td><td>Global <span class="mono">usedOfferIdHash</span></td><td>None found</td></tr>
+                <tr><td class="mono">T-07</td><td>Finalize before the challenge window</td><td><span class="mono">ChallengeNotExpired</span></td><td>None found</td></tr>
+                <tr><td class="mono">T-11</td><td>Fake <span class="mono">claimAccepted</span></td><td>Buyer dispute; arbiter review</td><td>Steam unverifiable (F-01)</td></tr>
+                <tr><td class="mono">T-12</td><td>Buyer freezes a claim by disputing</td><td>Arbiter resolution</td><td>Griefing (F-04)</td></tr>
+                <tr><td class="mono">T-13</td><td>Seller marks an offer without sending it</td><td>Buyer dispute; arbiter review</td><td>Freeze (F-05)</td></tr>
+                <tr><td class="mono">T-17</td><td>Trade URL leaks via API/DB/logs</td><td>AES-256-GCM; seller-only; cleanup; redaction</td><td>Relay can decrypt (F-03)</td></tr>
+                <tr><td class="mono">T-20</td><td>Login signature replay</td><td>One-time nonce; 5-minute TTL</td><td>None found</td></tr>
+                <tr><td class="mono">T-25</td><td>DNS rebinding against helper API</td><td>Loopback host check; origin allowlist</td><td>Local malware (F-13)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>7.2 Evidence pipeline</h3>
+          <div class="process" role="list" aria-label="E2 evidence pipeline">
+            <div class="process-step" role="listitem">
+              <span class="process-num">01 / MODEL</span>
+              <span class="process-title">Threat model</span>
+              <span class="process-detail">42 scenarios across contract, Relay, helper, Steam.</span>
+            </div>
+            <div class="process-arrow" aria-hidden="true">→</div>
+            <div class="process-step" role="listitem">
+              <span class="process-num">02 / TEST</span>
+              <span class="process-title">Adversarial tests</span>
+              <span class="process-detail">36 contract + 18 Relay + 12 helper + 99 E2E checks.</span>
+            </div>
+            <div class="process-arrow" aria-hidden="true">→</div>
+            <div class="process-step" role="listitem">
+              <span class="process-num">03 / ANALYZE</span>
+              <span class="process-title">Static + coverage</span>
+              <span class="process-detail">Slither 0 High/Medium; coverage 100% lines.</span>
+            </div>
+            <div class="process-arrow" aria-hidden="true">→</div>
+            <div class="process-step" role="listitem">
+              <span class="process-num">04 / DISTILL</span>
+              <span class="process-title">Findings</span>
+              <span class="process-detail">17 findings with severity, evidence, residual risk.</span>
+            </div>
+            <div class="process-arrow" aria-hidden="true">→</div>
+            <div class="process-step" role="listitem">
+              <span class="process-num">05 / DISCLOSE</span>
+              <span class="process-title">Trust table</span>
+              <span class="process-detail">What each component can and cannot do unilaterally.</span>
+            </div>
+          </div>
+
+          <h3>7.3 Results</h3>
+          <p>All 67 automated tests pass. The local E2E flow passes 99 checks across P1–P8. Slither 0.11.6 reports <strong>zero High/Medium</strong> findings and five informational instances: four timestamp comparisons in deadline logic and one low-level call in <span class="mono">withdraw</span>. Coverage is <strong>100% of statements, functions, and lines</strong> and <strong>87.5% of branches</strong>.</p>
+
+          <div class="stat-grid" style="margin-top: 20px;">
+            <div class="stat">
+              <span class="stat-number">67</span>
+              <span class="stat-label">automated tests passing across contract, Relay, helper, and shared</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">99</span>
+              <span class="stat-label">local E2E checks (P1–P8); Steam transport explicitly mocked</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">100%</span>
+              <span class="stat-label">statement, function, and line coverage; 87.5% branch</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">5</span>
+              <span class="stat-label">Slither informational results; 0 High or Medium</span>
+            </div>
+          </div>
+
+          <h3>7.4 Findings</h3>
+          <p>The findings are reported as trust-boundary and design risks, not as exploitable code vulnerabilities. The severity distribution is 1 high-impact accepted trust boundary (F-03), 3 medium, 8 low, and 5 informational; there are no critical or high code-vulnerability findings. The six findings below drive the security narrative.</p>
+
+          <div class="severity-block">
+            <div class="severity-bar" role="img" aria-label="Severity distribution of 17 findings: 1 high-impact accepted trust boundary, 3 medium, 8 low, and 5 informational; no critical or high code vulnerabilities.">
+              <span class="seg-accepted"></span>
+              <span class="seg-medium"></span>
+              <span class="seg-low"></span>
+              <span class="seg-info"></span>
+            </div>
+            <div class="severity-legend">
+              <span><i class="sev-accepted"></i>High impact / accepted — 1</span>
+              <span><i class="sev-medium"></i>Medium — 3</span>
+              <span><i class="sev-low"></i>Low — 8</span>
+              <span><i class="sev-info"></i>Informational — 5</span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <caption>Table 6 · Key findings</caption>
+              <thead>
+                <tr><th>ID</th><th>Finding</th><th>Severity</th><th>Evidence</th><th>Residual risk</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="mono">F-01</td><td>Steam delivery cannot be verified on-chain</td><td><span class="tag tag--medium">Medium</span></td><td>Claim path; E2E P7; threat model T-11</td><td>Arbiter reviews off-chain evidence</td></tr>
+                <tr><td class="mono">F-02</td><td>Arbiter is a single immutable EOA</td><td><span class="tag tag--medium">Medium</span></td><td>Contract design; trust table</td><td>Key loss or abuse; no rotation</td></tr>
+                <tr><td class="mono">F-03</td><td>Buyer Trade URL is a bearer secret the Relay can decrypt</td><td><span class="tag tag--accepted">High impact / accepted</span></td><td>Relay tests; E2E P4</td><td>Relay host compromise; user must accept offer</td></tr>
+                <tr><td class="mono">F-04</td><td>Buyer can freeze a seller claim by disputing</td><td><span class="tag tag--low">Low</span></td><td>E2E P7; contract tests</td><td>Temporary griefing; arbiter resolves</td></tr>
+                <tr><td class="mono">F-05</td><td>Seller can mark an offer without sending it</td><td><span class="tag tag--low">Low</span></td><td>Contract tests; threat model T-13</td><td>Buyer must dispute; time cost</td></tr>
+                <tr><td class="mono">F-06</td><td>Buyer-first Accept race cannot be proven on-chain</td><td><span class="tag tag--medium">Medium</span></td><td>Workflow analysis; manual Steam check</td><td>Procedural constraint; off-chain evidence</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>7.5 Trust table</h3>
+          <p>The trust table is the complement to the findings: it states what each component can do unilaterally. The contract has no owner and no upgrade path; the arbiter is privileged only on Disputed listings; the Relay can decrypt Trade URLs but cannot move escrow; the helper can observe Steam but cannot sign for the seller; Steam is authoritative for the item but invisible to the contract.</p>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <caption>Table 7 · Trust table (summary)</caption>
+              <thead>
+                <tr><th>Component</th><th>Trusted for</th><th>Can unilaterally</th><th>Cannot</th><th>Enforced by</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>SkinPactMarket</td><td>Correct state and accounting</td><td>Move escrow only through coded paths</td><td>Upgrade, add an owner, or withdraw arbitrarily</td><td>Immutable bytecode; no owner</td></tr>
+                <tr><td>Arbiter</td><td>Fair interpretation of evidence</td><td>Resolve any Disputed listing</td><td>Touch non-disputed states; resolve twice</td><td><span class="mono">NotArbiter</span>; <span class="mono">NotDisputed</span></td></tr>
+                <tr><td>Relay</td><td>Auth, URL vault, evidence bookkeeping</td><td>Decrypt Trade URLs at runtime</td><td>Move escrow; reveal URL to a non-seller</td><td>JWT/helper tokens; AES-256-GCM; on-chain role checks</td></tr>
+                <tr><td>Helper</td><td>Truthful Steam observation</td><td>Send offers; report evidence</td><td>Sign for the seller; claim funds</td><td>Seller runs it; Relay scopes by seller; Steam is source of truth</td></tr>
+                <tr><td>Steam</td><td>Item custody and transfer</td><td>Delay, deny, or reverse offers</td><td>Move on-chain escrow</td><td>None; evidence is observational</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>7.6 Discussion</h3>
+          <p>The strongest result is negative: within the tested scope, there is no authorization, reentrancy, double-settlement, or Trade URL access-control defect. The contract's state machine and pull-payment accounting held under mixed-state invariants; the Relay kept the raw Trade URL out of API payloads, database rows, and reports; and the helper's loopback API rejected DNS-rebinding hosts and disallowed origins. The residual risk is trust, not a missing check: Steam cannot be verified, the arbiter is a single key, and the Relay can decrypt the buyer's bearer URL. Those are disclosed constraints, not hidden vulnerabilities.</p>
+
+          <div class="callout callout--danger">
+            <span class="callout-title">What this does not prove</span>
+            Slither is a static analyzer, not a formal verification or a third-party audit. Coverage measures executed code, not correctness. The E2E Steam transport is mocked; the real-Steam acceptance was a manual exit check. The threat model covers the stated scope, not every deployment or adversarial environment.
+          </div>
+        </section>
+
+        <section class="section" id="usability">
+          <div class="section-head">
+            <span class="section-num">08</span>
+            <h2>Usability</h2>
+          </div>
+          <p>A formal usability study was not conducted. The analysis focuses on cost and security, and the remaining time was allocated to the deliverable pipeline. Usability evidence is therefore limited to the manual local E2E flow and the manual real-Steam exit check: the seller scans a QR code, pairs the helper, lists an item; the buyer saves an account, funds escrow, and accepts the offer in Steam Guard; the seller marks the offer and the buyer confirms. The flow is functional but not validated with independent users.</p>
+          <p>If a usability study is added, the intended protocol is a 2–3 reviewer Nielsen heuristic rather than a user study: reviewers walk the four tasks above, record completion, friction, and severity, and the report labels the result explicitly as a heuristic evaluation. No fabricated SEQ/SUS scores are presented here.</p>
+        </section>
+
+        <section class="section" id="limitations">
+          <div class="section-head">
+            <span class="section-num">09</span>
+            <h2>Security and Limitations</h2>
+          </div>
+
+          <p>The following constraints are part of the contribution, not fine print. They should be read alongside the positive results.</p>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <caption>Table 8 · Residual risks and required disclosures</caption>
+              <thead>
+                <tr><th>Limitation</th><th>Impact</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Steam delivery is off-chain and unverifiable</td><td>False claims require arbitration; no on-chain proof</td><td>Disclosed (F-01)</td></tr>
+                <tr><td>Arbiter is a single immutable EOA</td><td>Key loss disables disputes; abuse can misdirect funds</td><td>Disclosed (F-02)</td></tr>
+                <tr><td>Trade URL is a bearer secret; Relay can decrypt</td><td>Relay compromise leaks active URLs; user must still accept</td><td>Disclosed (F-03)</td></tr>
+                <tr><td>No formal usability study</td><td>No user-level evidence for the helper/Steam flow</td><td>Disclosed (§8)</td></tr>
+                <tr><td>Test ETH has no value; mock Steam in E2E</td><td>Economic and delivery results are illustrative</td><td>Disclosed throughout</td></tr>
+                <tr><td>No third-party audit or formal verification</td><td>Static analysis and tests are not a security guarantee</td><td>Disclosed (§7)</td></tr>
+                <tr><td>L1 gas dominates low-priced trades</td><td>Break-even is high at 1% fees</td><td>Disclosed (E1)</td></tr>
+                <tr><td>Challenge notifications rely on UI polling</td><td>Buyer may miss a challenge window</td><td>Disclosed (F-07)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p><strong>Testnet-only statement.</strong> SkinPact is a course prototype. Escrow uses Sepolia test ETH, which has no real value. CS2 items remain off-chain assets. The system is not intended for mainnet, real money, or production use.</p>
+          <p><strong>Mock statement.</strong> The automated local E2E uses a mocked Steam transport; the helper's offer and acceptance reports are simulated there. The real-Steam acceptance is a separate manual exit check and is not claimed as automated evidence. The video and report must label real vs mock consistently.</p>
+        </section>
+
+        <section class="section" id="conclusion">
+          <div class="section-head">
+            <span class="section-num">10</span>
+            <h2>Conclusion and Future Work</h2>
+          </div>
+          <p>SkinPact shows that a small, auditable escrow state machine can coordinate a Steam delivery without custodial fund authority. The contract has no owner, no upgrade path, and no emergency withdrawal; the bond and pull-payment design return funds on every terminal path; the dispute path gives the parties a last resort when delivery is contested. E1 makes the cost visible: at 10 gwei and $3,000/ETH, a successful Sepolia trade costs about $35 in gas, and a 1% fee only breaks even above roughly $3,520. E2 makes the trust visible: no High/Medium static findings, no exploitable authorization or double-settlement defect in the tested scope, but Steam remains unverifiable, the arbiter is a single key, and the Relay can decrypt the buyer's Trade URL.</p>
+          <p>Future work should move in four directions: (1) an L2 or stablecoin settlement path so low-priced skins are economic; (2) a multi-signature or policy-bound arbiter with an evidence-read API and a documented chain of custody; (3) a key-management design for the Relay's Trade URL vault (KMS/HSM, minimized retention, helper-token revocation); and (4) a real usability study of the seller-helper and Steam-accept flow. None of these changes the core claim: the escrow is a coordination layer around an off-chain delivery rail, and its value depends on making both the cost and the trust explicit.</p>
+        </section>
+
+        <section class="section" id="contribution">
+          <div class="section-head">
+            <span class="section-num">11</span>
+            <h2>Team Contributions</h2>
+          </div>
+          <p class="table-note" style="margin-top:0;">Names and percentages are completed by the team before submission. The file name uses the team-member count, for example <span class="mono">5-SkinPact.pdf</span>.</p>
+          <div class="table-wrap contribution">
+            <table class="data-table">
+              <caption>Table 9 · Contribution table</caption>
+              <thead>
+                <tr><th>Role</th><th>Responsibility</th><th>Primary evidence</th><th>Contributor</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="mono">R1</td><td>Project management, report, contribution table, submission</td><td>Report, spec, QA</td><td class="name">—</td></tr>
+                <tr><td class="mono">R2</td><td>Contract, security, E1/E2, Sepolia, Slither</td><td>Contract, E1/E2 evidence</td><td class="name">—</td></tr>
+                <tr><td class="mono">R3</td><td>Web, Relay, helper, Steam, demo integration</td><td>Web, Relay, helper tests</td><td class="name">—</td></tr>
+                <tr><td class="mono">R4</td><td>Data, experiments, charts</td><td>E1 dataset, figures</td><td class="name">—</td></tr>
+                <tr><td class="mono">R5</td><td>Slides, video, rehearsal, backup</td><td>Slides, video links</td><td class="name">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="references">
+          <div class="section-head">
+            <span class="section-num">12</span>
+            <h2>References</h2>
+          </div>
+          <ol class="refs">
+            <li id="ref-1">SteamDB. “Steam Market Review.” <span class="u">https://steamdb.com/en/markets/steam</span> (accessed 2026-11-07). Seller fee 15% = 5% Steam transaction fee + 10% CS2 game fee; buyer fee 0%.</li>
+            <li id="ref-2">BUFF163. “BUFF手续费下调公告” (announcement 87397). <span class="u">https://buff.163.com/news/87397</span> (accessed 2026-11-07). Seller fee cut from 2.5% to 1.5%; withdrawal fee 1%.</li>
+            <li id="ref-3">SteamDB. “YouPin Review.” <span class="u">https://steamdb.com/en/markets/youpin</span> (last verified 2026-07-01; accessed 2026-11-07). Seller fee 1%, buyer fee 0%.</li>
+            <li id="ref-4">Ethereum Foundation. “EIP-8037 / EIP-8038 Glamsterdam.” <span class="u">https://blog.ethereum.org/2026/11/06/glamsterdam-8037-8038</span> (2026-11-06). State creation and state access repricing.</li>
+            <li id="ref-5">Hardhat. “Amsterdam hardfork support.” <span class="u">https://hardhat.org/docs/reference/amsterdam-support</span> (accessed 2026-11-07).</li>
+            <li id="ref-6">EIP-7708: ETH transfers emit a log. <span class="u">https://eips.sh/eip/7708</span> (accessed 2026-11-07).</li>
+            <li id="ref-7">OpenZeppelin. “ReentrancyGuard.” <span class="u">https://docs.openzeppelin.com/contracts/5.x/api/utils#ReentrancyGuard</span> (accessed 2026-11-07).</li>
+            <li id="ref-8">Hardhat. <span class="u">https://hardhat.org</span> (accessed 2026-11-07).</li>
+            <li id="ref-9">Crytic. “Slither.” <span class="u">https://github.com/crytic/slither</span> (accessed 2026-11-07).</li>
+            <li id="ref-10">solidity-coverage. <span class="u">https://github.com/sc-forks/solidity-coverage</span> (accessed 2026-11-07).</li>
+            <li id="ref-11">ethers.js v6 documentation. <span class="u">https://docs.ethers.org/v6/</span> (accessed 2026-11-07).</li>
+            <li id="ref-12">MetaMask developer documentation. <span class="u">https://docs.metamask.io</span> (accessed 2026-11-07).</li>
+            <li id="ref-13">SkinPact repository. <span class="u">https://github.com/identity411/dapps</span> (commit <span class="mono">6d8ffa0</span>; accessed 2026-11-07).</li>
+            <li id="ref-14">Sepolia Etherscan. SkinPactMarket verified contract. <span class="u">https://sepolia.etherscan.io/address/0x2Ffca05611801F532Afc6135b56baBEB0D7460eF#code</span> (accessed 2026-11-07).</li>
+            <li id="ref-15">OpenSea. “Introducing Seaport Protocol.” <span class="u">https://blog-v3.opensea.io/articles/introducing-seaport-protocol</span> (accessed 2026-11-07). EIP-712 signed orders, fulfillment, batching.</li>
+            <li id="ref-16">0x Protocol: off-chain order relay and on-chain settlement. <span class="u">https://www.gate.com/learn/articles/how-does-0x-protocol-work</span> (accessed 2026-11-07).</li>
+            <li id="ref-17">SteamDB. “Skinport Review.” <span class="u">https://steamdb.com/en/markets/skinport</span> (verified 2026-07-02; accessed 2026-11-07). Seller fee 8% standard; reduced tiers for high-value/private listings.</li>
+            <li id="ref-18">Skinport. “Is Skinport Safe and Secure?” <span class="u">https://skinport.com/blog/is-skinport-safe-and-secure</span> (accessed 2026-11-07). Custodial bot flow; no blockchain settlement.</li>
+          </ol>
+        </section>
+
+        <section class="appendix" id="appendix-a">
+          <div class="section-head">
+            <span class="section-num">A</span>
+            <h2>Appendix A — Sepolia Evidence</h2>
+          </div>
+          <p>The contract is deployed and verified on Sepolia. The completion smoke used the same verified contract and waited through the real windows; no new contract was deployed for E1.</p>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <caption>Table A1 · Deployment and E1 completion evidence</caption>
+              <thead>
+                <tr><th>Item</th><th>Value</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Contract</td><td class="mono">0x2Ffca05611801F532Afc6135b56baBEB0D7460eF</td></tr>
+                <tr><td>Network / chain ID</td><td class="mono">Sepolia / 11155111</td></tr>
+                <tr><td>Deployment tx</td><td class="mono">0xa13facad2e103aa5df7fe0d876f73e742cb3ba4c9c9a7a037d446f52c22e04e6</td></tr>
+                <tr><td>Deployment block</td><td class="mono">12077649</td></tr>
+                <tr><td>Constructor</td><td class="mono">maxPrice 0.1 ETH; minBond 0.001 ETH; offer 600 s; challenge 300 s; delivery 3600 s; arbiter 0xfc73…6D53</td></tr>
+                <tr><td>Verification</td><td><a href="https://sepolia.etherscan.io/address/0x2Ffca05611801F532Afc6135b56baBEB0D7460eF#code">Etherscan · Exact Match</a></td></tr>
+                <tr><td><span class="mono">claimAccepted</span></td><td class="mono">0x9c460ea01743acebb4e966320965db0aa677d60dea7bfecdf564118ee7faab55 · 144,830 gas</td></tr>
+                <tr><td><span class="mono">finalizeClaim</span></td><td class="mono">0x23785c86b1effc6b2a43fa3363b75bf85d0694524acd71ac604acd0fa90b743b · 151,253 gas</td></tr>
+                <tr><td><span class="mono">expireOrder</span></td><td class="mono">0xb1073786cadeb963116d32d2d5ba0afc1242dab090470a0ee0a2776b0db0db3e · 67,704 gas</td></tr>
+                <tr><td><span class="mono">withdraw</span></td><td class="mono">0x5054aa174a1e705b0c10ce680cb029816c284fa82423a9684c4c057214cfee70 · 43,004 gas</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-note">Raw data: <span class="mono">experiments/e1/sepolia-smoke.json</span> (original 11 txs) and <span class="mono">experiments/e1/sepolia-smoke-missing.json</span> (completion smoke, including setup txs and listing IDs).</p>
+        </section>
+
+        <section class="appendix" id="appendix-b">
+          <div class="section-head">
+            <span class="section-num">B</span>
+            <h2>Appendix B — Reproducibility</h2>
+          </div>
+          <p>The experiment is reproducible from the repository root. The local gas run writes the CSV/JSON; the report script merges the Sepolia smoke data and generates the charts; the Slither and coverage commands are recorded for audit.</p>
+          <div class="callout">
+            <span class="callout-title">Commands</span>
+            <div class="mono" style="font-size:12px; line-height:1.8;">
+              npm test<br>
+              npm run e2e:local<br>
+              npm run typecheck &amp;&amp; npm run build<br>
+              npm run e1:gas<br>
+              npm run e1:report<br>
+              cd contracts &amp;&amp; npx hardhat coverage<br>
+              slither contracts/SkinPactMarket.sol --solc &lt;hardhat-solc&gt; --solc-remaps "@openzeppelin/=&lt;repo&gt;/node_modules/@openzeppelin/" --filter-paths "node_modules"
+            </div>
+          </div>
+          <p class="table-note">Detailed commands and environment versions are in <span class="mono">experiments/e1/README.md</span> and <span class="mono">experiments/e2/README.md</span>. The completion smoke is optional to read the committed data; re-running it sends real testnet transactions and waits for the on-chain windows.</p>
+        </section>
+
+        <footer class="footer">
+          <span>SkinPact · Experiment Analysis Report</span>
+          <span>Testnet only · Draft for team review · 2026-11-07</span>
+        </footer>
+      </main>
+
+      <aside class="toc" aria-label="Contents">
+        <p class="toc-title">Contents</p>
+        <a href="#abstract">Abstract</a>
+        <a href="#introduction">1 · Introduction</a>
+        <a href="#background">2 · Background</a>
+        <a href="#design">3 · Design</a>
+        <a href="#implementation">4 · Implementation</a>
+        <a href="#methodology">5 · Methodology</a>
+        <a href="#e1">6 · E1 — Gas / Fees</a>
+        <a href="#e2">7 · E2 — Security</a>
+        <a href="#usability">8 · Usability</a>
+        <a href="#limitations">9 · Limitations</a>
+        <a href="#conclusion">10 · Conclusion</a>
+        <a href="#contribution">11 · Contributions</a>
+        <a href="#references">12 · References</a>
+        <a href="#appendix-a" class="toc-sub">A · Sepolia evidence</a>
+        <a href="#appendix-b" class="toc-sub">B · Reproducibility</a>
+      </aside>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

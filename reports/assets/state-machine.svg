@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" role="img">
+  <title>SkinPact S2-mini state machine</title>
+  <desc>Active, Funded, OfferSent, ClaimPending, Completed, Cancelled, Refunded, and Disputed states with labeled transitions.</desc>
+  <defs>
+    <marker id="arrowB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <rect x="28" y="70" width="164" height="72" rx="6" fill="#e7f0f7" stroke="#175c86"/>
+  <text x="110" y="100" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17.5" font-weight="700" fill="#0e3f5c">Active</text>
+  <text x="110" y="124" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#5b6778">1 · bond locked</text>
+
+  <rect x="218" y="70" width="164" height="72" rx="6" fill="#e7f0f7" stroke="#175c86"/>
+  <text x="300" y="100" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17.5" font-weight="700" fill="#0e3f5c">Funded</text>
+  <text x="300" y="124" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#5b6778">2 · price in escrow</text>
+
+  <rect x="408" y="70" width="164" height="72" rx="6" fill="#e7f0f7" stroke="#175c86"/>
+  <text x="490" y="100" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17.5" font-weight="700" fill="#0e3f5c">OfferSent</text>
+  <text x="490" y="124" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#5b6778">3 · offer declared</text>
+
+  <rect x="598" y="70" width="164" height="72" rx="6" fill="#e7f0f7" stroke="#175c86"/>
+  <text x="680" y="100" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17.5" font-weight="700" fill="#0e3f5c">ClaimPending</text>
+  <text x="680" y="124" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#5b6778">4 · challenge open</text>
+
+  <rect x="788" y="70" width="164" height="72" rx="6" fill="#e9f5ef" stroke="#1f7a5a"/>
+  <text x="870" y="100" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17.5" font-weight="700" fill="#145c43">Completed</text>
+  <text x="870" y="124" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#1f7a5a">5 · seller paid</text>
+
+  <rect x="28" y="285" width="164" height="72" rx="6" fill="#f1f4f7" stroke="#8b98a8"/>
+  <text x="110" y="315" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17.5" font-weight="700" fill="#475569">Cancelled</text>
+  <text x="110" y="339" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#64748b">8 · bond refunded</text>
+
+  <rect x="218" y="285" width="164" height="72" rx="6" fill="#fdf3e7" stroke="#b45309"/>
+  <text x="300" y="315" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17.5" font-weight="700" fill="#7a4506">Refunded</text>
+  <text x="300" y="339" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#b45309">6 · price + bond credits</text>
+
+  <rect x="470" y="285" width="190" height="72" rx="6" fill="#fdecea" stroke="#b42318"/>
+  <text x="565" y="315" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17.5" font-weight="700" fill="#7d1b12">Disputed</text>
+  <text x="565" y="339" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#b42318">7 · arbiter decides</text>
+
+  <path d="M 192 106 L 218 106" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#arrowB)"/>
+  <text x="205" y="58" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#475569">buy</text>
+
+  <path d="M 382 106 L 408 106" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#arrowB)"/>
+  <text x="395" y="58" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#475569">mark</text>
+
+  <path d="M 572 106 L 598 106" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#arrowB)"/>
+  <text x="585" y="58" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#475569">claim</text>
+
+  <path d="M 762 106 L 788 106" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#arrowB)"/>
+  <text x="775" y="58" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#475569">finalize</text>
+
+  <path d="M 110 142 L 110 285" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#arrowB)"/>
+  <text x="120" y="218" font-family="Arial, Helvetica, sans-serif" font-size="13.5" fill="#475569">cancelListing</text>
+
+  <path d="M 300 142 L 300 285" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#arrowB)"/>
+  <text x="310" y="218" font-family="Arial, Helvetica, sans-serif" font-size="13.5" fill="#475569">expireOrder</text>
+
+  <path d="M 490 142 L 545 285" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#arrowB)"/>
+  <text x="508" y="214" font-family="Arial, Helvetica, sans-serif" font-size="13.5" fill="#475569">openDispute</text>
+
+  <path d="M 680 142 L 615 285" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#arrowB)"/>
+  <text x="668" y="226" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-size="13.5" fill="#475569">buyer dispute</text>
+
+  <path d="M 655 285 L 788 148" fill="none" stroke="#1f7a5a" stroke-width="1.5" marker-end="url(#arrowB)"/>
+  <text x="728" y="220" font-family="Arial, Helvetica, sans-serif" font-size="13.5" fill="#1f7a5a">seller wins</text>
+
+  <path d="M 470 321 L 382 321" fill="none" stroke="#b45309" stroke-width="1.5" marker-end="url(#arrowB)"/>
+  <text x="426" y="311" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13.5" fill="#b45309">buyer wins</text>
+
+  <text x="38" y="440" font-family="Arial, Helvetica, sans-serif" font-size="13.5" fill="#475569">Buyer confirmReceipt can also settle Funded, OfferSent, or ClaimPending directly to Completed.</text>
+  <text x="38" y="463" font-family="Arial, Helvetica, sans-serif" font-size="13.5" fill="#475569">All terminal paths pay through pull-payment credits; no state locks escrow permanently.</text>
+
+  <rect x="38" y="500" width="13" height="13" rx="2" fill="#e9f5ef" stroke="#1f7a5a"/>
+  <text x="58" y="511" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#475569">terminal success</text>
+  <rect x="185" y="500" width="13" height="13" rx="2" fill="#fdf3e7" stroke="#b45309"/>
+  <text x="205" y="511" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#475569">refund</text>
+  <rect x="285" y="500" width="13" height="13" rx="2" fill="#fdecea" stroke="#b42318"/>
+  <text x="305" y="511" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#475569">dispute</text>
+  <rect x="380" y="500" width="13" height="13" rx="2" fill="#f1f4f7" stroke="#8b98a8"/>
+  <text x="400" y="511" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#475569">cancel</text>
+</svg>
