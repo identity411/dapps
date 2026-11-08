@@ -12,6 +12,8 @@
     "web"
   ],
   "scripts": {
+    "start": "node scripts/dev-sepolia.mjs",
+    "dev:sepolia": "node scripts/dev-sepolia.mjs",
     "stage0:check": "node scripts/stage0/check-env.mjs",
     "stage0:helper": "node scripts/stage0/seller-helper.mjs",
     "compile": "npm run compile -w @skinpact/contracts",

@@ -55,7 +55,34 @@ flowchart LR
 - **Helper 不接收卖家钱包私钥，不自动签链上交易，不替买家接受 offer。**
 - **Buyer Trade URL 是 bearer secret**：Relay 用 AES-256-GCM 加密保存，只在链上 `Funded` 后向该 listing 的卖家/helper 揭示；API 不记录请求体/URL，listing 终态后删除。Web 的卖家界面不展示 URL。
 
-## 快速开始（本地）
+## 一键启动（Sepolia，推荐）
+
+日常演示和手动验收统一使用 **Sepolia**，不需要启动本地 Hardhat 节点。仓库根目录的启动脚本会同时拉起 Relay 和 Web：
+
+```bash
+npm install
+
+# 确认仓库根目录 .env 中有：
+# SEPOLIA_RPC_URL / JWT_SECRET / RELAY_ENCRYPTION_KEY
+
+npm start                 # 等价于 npm run dev:sepolia
+# Web:   http://localhost:5173
+# Relay: http://127.0.0.1:8787
+```
+
+脚本会自动完成这些检查与配置：
+
+1. 从仓库根目录 `.env` 读取 `SEPOLIA_RPC_URL` 和 Relay 密钥；
+2. 校验 `deployments/sepolia.json` 的 chainId 与合约地址，并通过 RPC 确认链为 `11155111`、合约地址上存在字节码；
+3. 生成被 gitignore 的 `web/.env.sepolia`（权限 600），不提交 RPC URL；
+4. 以 **Sepolia** 配置启动 Relay（独立数据库 `relay/data/skinpact-sepolia.db`）和 `vite --mode sepolia`；
+5. 按 `Ctrl-C` 同时停止两个进程；端口被占用时会打印停止旧进程的命令。
+
+当前 Sepolia 合约：`0x2Ffca05611801F532Afc6135b56baBEB0D7460eF`。MetaMask 需切换到 **Sepolia（11155111）**，并准备 test ETH 支付 gas 和 `0.001 ETH` 的挂牌保证金。完整卖家流程（Steam 扫码、发 offer）还需在另一个终端运行 `npm run helper`。市场暂时没有 Active 挂牌是正常的。
+
+## 本地链开发（可选）
+
+以下流程只用于本地链开发、合约测试和 E2E；日常演示请用上节的 `npm start`。
 
 前置：Node.js ≥ 20、npm、MetaMask 浏览器扩展。真实 Steam 手动测试另需两个启用 Steam Guard Mobile Authenticator > 7 天的测试账号。
 
@@ -133,10 +160,11 @@ helper 会把 helper token、Steam refresh token 和本地发送账本写入 `he
 npm run preflight:sepolia # 只打印公开地址/余额与缺失项
 npm run deploy:sepolia    # 部署 + 尝试 verify，写 deployments/sepolia.json
 npm run smoke:sepolia     # 真实 Sepolia on-chain smoke + gas 数据
-npm run web:sepolia       # 使用 web/.env.sepolia 连接 Sepolia
+npm start                 # Web + Relay，一键进入 Sepolia 演示模式（推荐）
+npm run web:sepolia       # 只启动 Web；需已有 web/.env.sepolia
 ```
 
-本地链演示仍可用；Sepolia demo 使用上面的地址与 `web/.env.sepolia`。
+本地链演示仍可用；Sepolia 演示统一使用 `npm start`，它会从 `deployments/sepolia.json` 和根 `.env` 自动生成 `web/.env.sepolia`。
 
 ## 最小交易流程
 
@@ -194,7 +222,9 @@ E2E 会启动一个临时的 Hardhat 节点、部署合约、以内存 SQLite �
 
 | 变量 | 说明 |
 |---|---|
-| `CONTRACT_ADDRESS` | 本地部署地址；复制自 `deployments/local.json` |
+| `CONTRACT_ADDRESS` | 本地部署地址；复制自 `deployments/local.json`。Sepolia 模式由启动脚本从 `deployments/sepolia.json` 覆盖 |
+| `SEPOLIA_RPC_URL` | Sepolia RPC；`npm start` 用它校验链并生成 Web 环境 |
+| `DEPLOYMENT_BLOCK` | Sepolia 事件扫描起点；启动脚本使用 `deployments/sepolia.json` 中的 `deploymentBlock` |
 | `DELIVERY_WINDOW_SECONDS` | `markOfferSent` 后多久允许任何人升级争议，默认 3600 |
 | `ARBITER_ADDRESS` | 争议裁决地址；留空时 `deploy:local` 使用 deployer |
 | `JWT_SECRET` | Relay 钱包登录 JWT；≥ 16 字符 |
@@ -206,7 +236,7 @@ E2E 会启动一个临时的 Hardhat 节点、部署合约、以内存 SQLite �
 | `HELPER_WEB_ORIGINS` | 允许调用 helper API 的 loopback Web origin，逗号分隔 |
 | `VITE_HELPER_URL` | Web 访问本地 helper 的地址，默认 `http://127.0.0.1:8788` |
 
-Web 的 Vite 默认读取 `deployments/local.json` 与本地默认地址，通常无需额外 env。
+Web 的 Vite 默认读取 `deployments/local.json` 与本地默认地址；Sepolia 模式由 `npm start` 自动生成 `web/.env.sepolia`（gitignored，权限 600），通常不需要手动维护。
 
 ## S2-mini 安全边界与已知限制
 
@@ -233,7 +263,7 @@ relay/           Express + SQLite，钱包登录、inventory、URL vault、helpe
 helper/          卖家本地 Node helper（steam-session + trade offer manager）
 web/             React + Vite + ethers v6
 scripts/stage0/  Stage 0 可行性演示（只作参考，不复用于 S1/S2）
-scripts/         local E2E
+scripts/         local E2E、Sepolia 数据脚本、`dev-sepolia.mjs` 一键启动
 specs/           MVP / Stage 0 / Stage 1 / S2-mini specs
 ```
 
@@ -248,14 +278,15 @@ specs/           MVP / Stage 0 / Stage 1 / S2-mini specs
 
 ## 常见问题
 
-- **Web 显示“本地合约未配置”**：先 `npm run chain`、`npm run deploy:local`，再重启 `npm run web`。
+- **想演示 Sepolia，MetaMask 却显示 Hardhat Local 31337**：说明启动的是本地模式。停止 `npm run web` / `npm run relay`，在仓库根目录改用 `npm start`，并在 MetaMask 选择 Sepolia（11155111）。
+- **Web 显示“本地合约未配置”**：这只影响本地模式。先 `npm run chain`、`npm run deploy:local`，再重启 `npm run web`；Sepolia 演示请用 `npm start`。
 - **绑定 SteamID 后库存为空或 `relay_timeout`**：Relay 需要访问 `steamcommunity.com` 读取公开库存。先验证：
   ```bash
   curl -4 -I --max-time 10 https://steamcommunity.com/
   ```
   如果超时，不是库存设置问题，而是 Relay 所在网络访问不了 Steam 社区。请开启系统级 VPN 的 TUN/全局模式（例如 iKuuuVPN）后重启 Relay。Relay 的库存读取按系统路由直连，不读取 `HTTPS_PROXY`；浏览器能打开 Steam 社区不代表 Node/Relay 也能访问。卖家 helper 也会连接 Steam Community，必须在同样的网络环境下启动。
-- **Relay 启动报 RPC/合约错误**：检查本地链是否运行、`.env` 的 `CONTRACT_ADDRESS` 是否与当前 `deployments/local.json` 一致；链重启后地址会变。
-- **MetaMask 交易失败/网络错误**：切到 31337；重启本地链后需要在 MetaMask 中重置账户 nonce（设置 → 高级 → 清除活动标签页数据）或重新导入。
+- **Relay 启动报 RPC/合约错误（本地模式）**：检查本地链是否运行、`.env` 的 `CONTRACT_ADDRESS` 是否与当前 `deployments/local.json` 一致；链重启后地址会变。Sepolia 模式由 `npm start` 自动覆盖这些配置。
+- **MetaMask 交易失败/网络错误（本地模式）**：切到 31337；重启本地链后需要在 MetaMask 中重置账户 nonce（设置 → 高级 → 清除活动标签页数据）或重新导入。Sepolia 模式请保持网络为 11155111。
 - **Sell 页一直提示 helper 未连接**：确认 `npm run helper` 仍在运行，并且网页 origin 是 `http://localhost:5173` 或 `http://127.0.0.1:5173`。helper API 只允许这两个 loopback origin，且只绑定 `127.0.0.1:8788`。
 - **Steam 二维码不出现**：先看 helper 终端是否报 Relay 配对/Steam 网络错误；Relay 必须在运行。二维码过期后 Web 会自动重新获取，也可以点“重新获取二维码”。
 - **helper 提示 active offers**：helper 本地账本还有未完成的 offer，不能切换到另一个卖家钱包；先处理当前挂单或重启 helper。
