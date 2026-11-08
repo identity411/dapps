@@ -2,6 +2,7 @@
 
 - `4-SkinPact.pdf` — final 14-page A4 report, generated from the HTML below.
 - `4-SkinPact.pptx` — final 12-slide presentation deck (speaker notes included).
+- `4-SkinPact-video.txt` — the Unlisted YouTube link for the final demo video.
 - `skinpact-experiment-report.html` — standalone report source; open in a browser and use **Print / Save PDF** (A4).
 - `assets/` — report figures and public-source screenshots.
 
@@ -37,15 +38,16 @@ Required upload names for this four-person team:
 
 - `4-SkinPact.pdf` — written report.
 - `4-SkinPact.pptx` — presentation slides.
-- `4-SkinPact-video.txt` — contains the primary unlisted video URL and a backup URL.
-- Code — public repository `https://github.com/identity411/dapps`; commit and push the final docs/code before submitting.
+- `4-SkinPact-video.txt` — primary Unlisted YouTube URL: `https://youtu.be/mNZCJZdfuro`
+- Code — public repository `https://github.com/identity411/dapps` (latest commit includes the final submission materials).
 
-Still to do:
+Submission status:
 
-- [ ] Upload the video and create `4-SkinPact-video.txt`.
-- [ ] Commit and push the final report, slides, README, and code changes.
-- [ ] Verify the repository link opens in an incognito window.
-- [ ] Verify every uploaded link opens without a course-account login.
+- [x] Video uploaded as Unlisted and link verified playable.
+- [x] Final report, slides, README, and code committed and pushed.
+- [ ] Optional: upload the same video to Google Drive or OneDrive as a backup link.
+- [ ] Final check: repository and video link open in an incognito window.
+- [ ] Upload the four required items to the course system.
 
 ### Regenerate the PDF
 
